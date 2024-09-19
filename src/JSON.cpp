@@ -50,7 +50,9 @@ namespace JSON
 			double floatingPointValue;
 		};
 		
+
 		// Properties
+		
 		/**
 		 * @brief
 		 *     This indicates the type of the value represented
@@ -59,6 +61,33 @@ namespace JSON
 		Type type = Type::Null;
 
 		// Methods
+
+		// Lifecycle Management
+
+		~Impl() noexcept
+		{
+			switch (type)
+			{
+				case Type::String:
+				{
+					delete stringValue;
+				}
+				break;
+
+				default:
+					break;
+			}
+		}
+		Impl(const Impl &) noexcept = delete;
+		Impl(Impl &&) noexcept;
+		Impl &operator=(const Impl &) noexcept = delete;
+		Impl &operator=(Impl &&) noexcept;
+
+		/**
+		 * @brief
+		 *     This is the default constructor
+		 */
+		Impl() = default;
 	};
 
 	JSON::~JSON() = default;
