@@ -60,6 +60,16 @@ TEST(JSONTests, NotIntegerDownCaseToInteger)
 	EXPECT_EQ(26, (int)JSON::JSON(26.5));
 }
 
+TEST(JSONTests, BadNumbers)
+{
+	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("0026"));
+	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("-0026"));
+	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("-"));
+	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("X"));
+	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("+"));
+	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("+42"));
+}
+
 TEST(JSONTests, NotFloatingPointDownCaseToFloatingPoint)
 {
 	EXPECT_EQ(0.0, (double)JSON::JSON(nullptr));
@@ -144,10 +154,22 @@ TEST(JSONTests, ToInteger)
 	ASSERT_TRUE((int)json == 26);
 }
 
+TEST(JSONTests, ToNegativeInteger)
+{
+	auto json = JSON::JSON::FromString("-26");
+	ASSERT_TRUE((int)json == -26);
+}
+
+TEST(JSONTests, ToInvalidNegativeInteger)
+{
+	auto json = JSON::JSON::FromString("--26");
+	ASSERT_TRUE((int)json == 0);
+}
+
 TEST(JSONTests, FromFloatingPoint)
 {
 	JSON::JSON json(3.14159);
-	ASSERT_EQ("3.141590", json.ToString());
+	ASSERT_EQ("3.14159", json.ToString());
 }
 
 TEST(JSONTests, ToFloatingPoint)

@@ -76,6 +76,95 @@ namespace
 
 	/**
 	 * @brief
+	 *     This parses the given string as an integer value.
+	 *
+	 * @param[in] s
+	 *     This is the string to be parsed.
+	 *
+	 * @return
+	 *     The integer value that is equivalent to given string.
+	 */
+	JSON::JSON parseInt(const std::string &s)
+	{
+		size_t index = 0;
+		size_t state = 0;
+		bool negative = false;
+		int value = 0;
+		while (index < s.length())
+		{
+			switch (state)
+			{
+				case 0: // [ minus ]
+					{
+						if (s[index] == '-')
+						{
+							negative = true;
+							++index;
+						}
+						state = 1;
+					}
+					break;
+
+				case 1: // integral part
+					{
+						if (s[index] == 0)
+						{
+							state = 2;
+						}
+						else if (s[index] >= '1' && s[index] <= '9')
+						{
+							state = 3;
+							value += (int)(s[index] - '0');
+						}
+						else
+							return JSON::JSON();
+						++index;
+					}
+					break;
+
+				case 2: // Invalid value for number
+					return JSON::JSON();
+					break;
+
+				case 3: // *DIGIT (1-9)
+					{
+						if (s[index] >= '1' && s[index] <= '9')
+						{
+							value *= 10;
+							value += (int)(s[index] - '0');
+						}
+						else
+						{
+							return JSON::JSON();
+						}
+						index++;
+					}
+					break;
+			}
+		}
+		if (state < 2)
+			return JSON::JSON();
+		else
+			return negative ? JSON::JSON(-1 * value) : JSON::JSON(value);
+	}
+
+	/**
+	 * @brief
+	 *     This parses the given string as a double value.
+	 *
+	 * @param[in] s
+	 *     This is the string to be parsed.
+	 *
+	 * @return
+	 *     The double value that is equivalent to given string.
+	 */
+	JSON::JSON parseFloat(const std::string &s)
+	{
+		return 0.0;
+	}
+
+	/**
+	 * @brief
 	 *     This function produces the escaped version of the
 	 *     given string.
 	 * 
@@ -455,7 +544,7 @@ namespace JSON
 			case Impl::Type::Integer:
 				return StringExtensions::sprintf("%d", impl_->integerValue);
 			case Impl::Type::FloatingPoint:
-				return StringExtensions::sprintf("%lf", impl_->floatingPointValue);
+				return StringExtensions::sprintf("%lg", impl_->floatingPointValue);
 			default:
 				return "";
 		}
@@ -463,16 +552,32 @@ namespace JSON
 
 	JSON JSON::FromString(const std::string &format)
 	{
-
-		if (format == "true")
+		if (format.empty())
+			return JSON();
+		else if (format[0] == '{')
+			return JSON();
+		else if (format[0] == '[')
+			return JSON();
+		else if (format[0] == '"' && format[format.length() - 1] == '"')
+			return unescape(format.substr(1, format.length() - 2));
+		else if (format == "null")
+			return nullptr;
+		else if (format == "true")
 			return true;
 		else if (format == "false")
 			return false;
-		else if (format == "null")
-			return nullptr;
-		else if (!format.empty() && format[0] == '"' && format[format.length() - 1] == '"')
-			return unescape(format.substr(1, format.length() - 2));
 		else
-			return JSON();
+		{
+			if (format.find_first_of(".eE") != std::string::npos)
+			{
+				// TODO: Parse as floating point number
+				return JSON(parseFloat(format));
+			}
+			else
+			{
+				// TODO: Parse as integer number
+				return JSON(parseInt(format));
+			}
+		}
 	}
 } // namespace JSON
