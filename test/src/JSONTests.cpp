@@ -13,6 +13,17 @@
 #include <gtest/gtest.h>
 #include <JSON/JSON.hpp>
 
-TEST(JSONTests, Placeholder)
+TEST(JSONTests, FromNull)
 {
+	JSON::JSON json(nullptr);
+	ASSERT_EQ("null", json.ToString());
+}
+
+TEST(JSONTests, ToNull)
+{
+	const auto json = JSON::JSON::FromString("null");
+	ASSERT_FALSE((bool)json);
+	ASSERT_TRUE(json == nullptr);
+}
+
 }
