@@ -26,4 +26,27 @@ TEST(JSONTests, ToNull)
 	ASSERT_TRUE(json == nullptr);
 }
 
+TEST(JSONTests, FromBoolean)
+{
+	JSON::JSON jsonTrue(true), jsonFalse(false);
+	ASSERT_EQ("true", jsonTrue.ToString());
+	ASSERT_EQ("false", jsonFalse.ToString());
+}
+
+TEST(JSONTests, ToBoolean)
+{
+	const auto jsonTrue = JSON::JSON::FromString("true");
+	const auto jsonFalse = JSON::JSON::FromString("false");
+	ASSERT_TRUE(jsonTrue == JSON::JSON(true));
+	ASSERT_TRUE((bool)jsonTrue);
+	ASSERT_TRUE(jsonFalse == JSON::JSON(false));
+	ASSERT_FALSE((bool)jsonFalse);
+}
+
+TEST(JSONTests, NotBooleanDownCastToBoolean)
+{
+	EXPECT_EQ(false, (bool)JSON::JSON(nullptr));
+	EXPECT_EQ(false, (bool)JSON::JSON(std::string("")));
+}
+
 }
