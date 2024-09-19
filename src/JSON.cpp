@@ -147,7 +147,49 @@ namespace JSON
 			return (0.0);
 	}
 
-	JSON::JSON(): impl_(new Impl())
+	JSON::JSON()
+		: impl_(new Impl())
 	{}
+
+	JSON::JSON(nullptr_t)
+		: impl_(new Impl())
+	{
+		impl_->type = Impl::Type::Null;
+	}
+
+	JSON::JSON(bool value)
+		: impl_(new Impl())
+	{
+		impl_->type = Impl::Type::Boolean;
+		impl_->booleanValue = value;
+	}
+
+	JSON::JSON(const std::string &value)
+		: impl_(new Impl())
+	{
+		impl_->type = Impl::Type::String;
+		impl_->stringValue = new std::string(value);
+	}
+
+	JSON::JSON(const char* value)
+		: impl_(new Impl())
+	{
+		impl_->type = Impl::Type::String;
+		impl_->stringValue = new std::string(value);
+	}
+
+	JSON::JSON(int value)
+		: impl_(new Impl())
+	{
+		impl_->type = Impl::Type::Integer;
+		impl_->integerValue = value;
+	}
+
+	JSON::JSON(double value)
+		: impl_(new Impl())
+	{
+		impl_->type = Impl::Type::FloatingPoint;
+		impl_->floatingPointValue = value;
+	}
 
 } // namespace JSON
