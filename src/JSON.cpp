@@ -30,6 +30,23 @@ namespace JSON
 	JSON::JSON(JSON &&) noexcept = default;
 	JSON& JSON::operator=(JSON &&) noexcept = default;
 
+	bool JSON::operator==(const JSON &other) const
+	{
+		if (impl_->type != other.impl_->type)
+			return false;
+		else switch (impl_->type)
+		{
+			case Impl::Type::Null:
+				return true;
+			case Impl::Type::Boolean:
+				return impl_->booleanValue == other.impl_->booleanValue;
+			case Impl::Type::String:
+				return *impl_->stringValue == *other.impl_->stringValue;
+			default:
+				return true;
+		}
+	}
+
 
 	JSON::JSON(): impl_(new Impl())
 	{}

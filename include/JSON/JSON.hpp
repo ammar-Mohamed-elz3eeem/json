@@ -36,7 +36,19 @@ namespace JSON
 		JSON &operator=(JSON &&) noexcept;
 
 		// Public Methods
-		
+
+		/**
+		 * @brief
+		 *     This is the equality comparison operator.
+		 * 
+		 * @param[in] other
+		 *     This is the other object we want to compare
+		 *     with this object.
+		 * 
+		 * @return true if both JSON objects are equal.
+		 */
+		bool operator==(const JSON &other) const;
+
 		/**
 		 * @brief
 		 *     Construct a new JSON object
