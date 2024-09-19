@@ -63,6 +63,7 @@ TEST(JSONTests, NotIntegerDownCaseToInteger)
 TEST(JSONTests, BadNumbers)
 {
 	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("0026"));
+	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("99999999999999999999999999"));
 	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("-0026"));
 	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("-"));
 	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("X"));
@@ -151,7 +152,9 @@ TEST(JSONTests, FromInteger)
 TEST(JSONTests, ToInteger)
 {
 	auto json = JSON::JSON::FromString("26");
-	ASSERT_TRUE((int)json == 26);
+	ASSERT_TRUE(json == JSON::JSON(26));
+	json = JSON::JSON::FromString("-256");
+	ASSERT_TRUE(json == JSON::JSON(-256));
 }
 
 TEST(JSONTests, ToNegativeInteger)

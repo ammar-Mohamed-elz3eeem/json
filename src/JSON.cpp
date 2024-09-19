@@ -128,10 +128,15 @@ namespace
 
 				case 3: // *DIGIT (1-9)
 					{
+						const int previousValue = value;
 						if (s[index] >= '1' && s[index] <= '9')
 						{
 							value *= 10;
 							value += (int)(s[index] - '0');
+							if (value / 10 != previousValue)
+							{
+								return JSON::JSON();
+							}
 						}
 						else
 						{
@@ -145,7 +150,7 @@ namespace
 		if (state < 2)
 			return JSON::JSON();
 		else
-			return negative ? JSON::JSON(-1 * value) : JSON::JSON(value);
+			return (JSON::JSON(value * (negative ? -1 : 1)));
 	}
 
 	/**
