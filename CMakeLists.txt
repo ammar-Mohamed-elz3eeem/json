@@ -25,6 +25,7 @@ target_include_directories(${This} PUBLIC include)
 target_link_libraries(${This} PUBLIC
     SystemAbstractions
     StringExtensions
+    Utf8
 )
 
 add_subdirectory(test)
