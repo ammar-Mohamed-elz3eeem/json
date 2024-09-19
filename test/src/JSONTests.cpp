@@ -49,4 +49,67 @@ TEST(JSONTests, NotBooleanDownCastToBoolean)
 	EXPECT_EQ(false, (bool)JSON::JSON(std::string("")));
 }
 
+TEST(JSONTests, NotStringDownCastedToString)
+{
+	EXPECT_EQ(std::string(""), (std::string)JSON::JSON(nullptr));
+	EXPECT_EQ(std::string(""), (std::string)JSON::JSON(false));
+	EXPECT_EQ(std::string(""), (std::string)JSON::JSON(true));
+}
+
+TEST(JSONTests, FromCString)
+{
+	JSON::JSON json("Hello, World!");
+	ASSERT_EQ("\"Hello, World!\"", json.ToString());
+}
+
+TEST(JSONTests, ToCString)
+{
+	const auto json = JSON::JSON::FromString("\"Hello, World!\"");
+	ASSERT_TRUE(json == "Hello, World!");
+}
+
+TEST(JSONTests, FromCPPString)
+{
+	JSON::JSON json(std::string("Hello, World!"));
+	ASSERT_EQ("\"Hello, World!\"", json.ToString());
+}
+
+TEST(JSONTests, ToCPPString)
+{
+	const auto json = JSON::JSON::FromString("\"Hello, World!\"");
+	ASSERT_TRUE(json == std::string("Hello, World!"));
+}
+
+TEST(JSONTests, ProperlyEscapeCharactersInString)
+{
+	JSON::JSON json(std::string("These need to be escaped: \", \\, \b, \f, \n, \r, \t"));
+	ASSERT_EQ("\"These need to be escaped: \\\", \\\\, \\b, \\f, \\n, \\r, \\t\"", json.ToString());
+}
+
+TEST(JSONTests, ProperlyEscapeUnicodeCharacters)
+{
+	std::string testStringDecoded("This is the greek word 'kosme': κόσμε");
+	std::string testStringEncodedDefault("\"This is the greek word 'kosme': κόσμε\"");
+	std::string testStringEncodedEscapeNonAscii("\"This is the greek word 'kosme': \\u03BA\\u1F79\\u03C3\\u03BC\\u03B5\"");
+	JSON::JSON json(testStringDecoded);
+	auto jsonEncoding = json.ToString();
+	EXPECT_EQ(testStringEncodedDefault, jsonEncoding);
+	JSON::EncodingOptions options;
+	options.escapeNonAscii = true;
+	jsonEncoding = json.ToString(options);
+	EXPECT_EQ(testStringEncodedEscapeNonAscii, jsonEncoding);
+	json = JSON::JSON::FromString(testStringEncodedDefault);
+	EXPECT_EQ(testStringDecoded, (std::string)json);
+	json = JSON::JSON::FromString(testStringEncodedEscapeNonAscii);
+	EXPECT_EQ(testStringDecoded, (std::string)json);
+}
+
+TEST(JSONTests, BadlyEscapedCharacters)
+{
+	auto json = JSON::JSON::FromString("\"This is bad: \\u123X\"");
+	EXPECT_EQ("This is bad: \\u123X", (std::string)json);
+	json = JSON::JSON::FromString("\"This is bad: \\x\"");
+	EXPECT_EQ("This is bad: \\x", (std::string)json);
+}
+
 }
