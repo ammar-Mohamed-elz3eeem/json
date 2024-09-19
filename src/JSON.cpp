@@ -27,6 +27,9 @@ namespace JSON
 	};
 
 	JSON::~JSON() = default;
+	JSON::JSON(JSON &&) noexcept = default;
+	JSON& JSON::operator=(JSON &&) noexcept = default;
+
 
 	JSON::JSON(): impl_(new Impl())
 	{}

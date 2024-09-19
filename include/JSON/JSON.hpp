@@ -31,9 +31,9 @@ namespace JSON
 
 		~JSON() noexcept;
 		JSON(const JSON &) noexcept = delete;
-		JSON(JSON &&) noexcept = delete;
+		JSON(JSON &&) noexcept;
 		JSON &operator=(const JSON &) noexcept = delete;
-		JSON &operator=(JSON &&) noexcept = delete;
+		JSON &operator=(JSON &&) noexcept;
 
 		// Public Methods
 		
