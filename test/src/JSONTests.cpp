@@ -71,6 +71,12 @@ TEST(JSONTests, BadNumbers)
 	EXPECT_EQ(JSON::JSON(), JSON::JSON::FromString("+42"));
 }
 
+TEST(JSONTests, BadDoubles)
+{
+	auto json = JSON::JSON::FromString(".5");
+	ASSERT_TRUE(json == JSON::JSON());
+}
+
 TEST(JSONTests, NotFloatingPointDownCaseToFloatingPoint)
 {
 	EXPECT_EQ(0.0, (double)JSON::JSON(nullptr));
@@ -171,12 +177,32 @@ TEST(JSONTests, ToInvalidNegativeInteger)
 
 TEST(JSONTests, FromFloatingPoint)
 {
-	JSON::JSON json(3.14159);
-	ASSERT_EQ("3.14159", json.ToString());
+	JSON::JSON json1(3.14159);
+	ASSERT_EQ("3.14159", json1.ToString());
+	JSON::JSON json2(-153.625);
+	ASSERT_EQ("-153.625", json2.ToString());
 }
 
 TEST(JSONTests, ToFloatingPoint)
 {
-	const auto json = JSON::JSON::FromString("3.14159");
-	ASSERT_TRUE((double)json == 3.14159);
+	auto json = JSON::JSON::FromString("3.14591");
+	ASSERT_TRUE(json == JSON::JSON(3.14591));
+	json = JSON::JSON::FromString("-153.625");
+	ASSERT_TRUE(json == JSON::JSON(-153.625));
+	json = JSON::JSON::FromString("-17.03");
+	ASSERT_TRUE(json == JSON::JSON(-17.03));
+	json = JSON::JSON::FromString("5.03e5");
+	ASSERT_TRUE(json == JSON::JSON(5.03e5));
+	json = JSON::JSON::FromString("5.3e-5");
+	ASSERT_TRUE(json == JSON::JSON(5.3e-5));
+	json = JSON::JSON::FromString("0.4");
+	ASSERT_TRUE(json == JSON::JSON(0.4));
+	json = JSON::JSON::FromString("-153.625e-5");
+	ASSERT_TRUE(json == JSON::JSON(-153.625e-5));
+	json = JSON::JSON::FromString("-153.625E+12");
+	ASSERT_TRUE(json == JSON::JSON(-153.625E+12));
+	json = JSON::JSON::FromString("-153.625E-1");
+	ASSERT_TRUE(json == JSON::JSON(-153.625E-1));
+	json = JSON::JSON::FromString("-153.625E1");
+	ASSERT_TRUE(json == JSON::JSON(-153.625E1));
 }

@@ -165,7 +165,147 @@ namespace
 	 */
 	JSON::JSON parseFloat(const std::string &s)
 	{
-		return 0.0;
+		size_t index = 0;
+		size_t state = 0;
+		bool negative = false;
+		bool negativeMagnitude = false;
+		bool negativeExponent = false;
+		double magnitude = 0.0;
+		double fraction = 0.0;
+		double exponent = 0.0;
+		size_t fractionDigits = 0;
+		while (index < s.length())
+		{
+			switch (state)
+			{
+				case 0: // [ minus ]
+					{
+						if (s[index] == '-')
+						{
+							negativeMagnitude = true;
+							++index;
+						}
+						state = 1;
+					}
+					break;
+
+				case 1: // integral part
+					{
+						if (s[index] == 0)
+						{
+							state = 2;
+						}
+						else if (s[index] >= '0' && s[index] <= '9')
+						{
+							state = 3;
+							magnitude += (double)(s[index] - '0');
+						}
+						else
+							return JSON::JSON();
+						++index;
+					}
+					break;
+
+				case 2: // Invalid value for number
+					return JSON::JSON();
+					break;
+
+				case 3: // *DIGIT (1-9)
+					{
+						if (s[index] >= '0' && s[index] <= '9')
+						{
+							magnitude *= 10.0;
+							magnitude += (double)(s[index] - '0');
+						}
+						else if (s[index] == '.')
+						{
+							state = 4;
+						}
+						else if (s[index] == 'e' || s[index] == 'E')
+						{
+							state = 6;
+						}
+						else
+						{
+							return JSON::JSON();
+						}
+						index++;
+					}
+					break;
+				case 4: // Fractional part: consists of one digit (0-9)
+					{
+						if (s[index] >= '0' && s[index] <= '9')
+						{
+							++fractionDigits;
+							fraction += (double)(s[index] - '0') * pow(10.0, -(double)fractionDigits);
+						}
+						else
+						{
+							return JSON::JSON();
+						}
+						state = 5;
+						++index;
+					}
+					break;
+				case 5: // Fractional part: consists of optional digits (0-9) or e or E
+					{
+						if (s[index] >= '0' && s[index] <= '9')
+						{
+							++fractionDigits;
+							fraction += (double)(s[index] - '0') * pow(10.0, -(double)fractionDigits);
+						}
+						else if (s[index] == 'e' || s[index] == 'E')
+						{
+							state = 6;
+						}
+						else
+						{
+							return JSON::JSON();
+						}
+						++index;
+					}
+					break;
+				case 6: // Exponential part: consists of [plus|minus] 1*DIGIT (0-9)
+					{
+						if (s[index] == '-')
+						{
+							negativeExponent = true;
+							++index;
+						}
+						else if (s[index] == '+')
+							++index;
+						state = 7;
+					}
+					break;
+				case 7: // Exponential part: required DIGIT (0-9)
+					{
+						state = 8;
+					}
+					break;
+				case 8: // Exponential part: Extra DIGITs (0-9)
+					{
+						if (s[index] >= '0' && s[index] <= '9')
+						{
+							exponent *= 10.0;
+							exponent += (double)(s[index] - '0');
+						}
+						else
+						{
+							return JSON::JSON();
+						}
+						++index;
+					}
+					break;
+			}
+		}
+		if ((state < 2) || (state == 4) || (state == 6) || (state == 7))
+			return JSON::JSON();
+		else
+			return JSON::JSON(
+				(magnitude + fraction) *
+				pow(10.0, (negativeExponent ? -1.0 : 1.0) * exponent) *
+				(negativeMagnitude ? -1.0 : 1.0)
+			);
 	}
 
 	/**
