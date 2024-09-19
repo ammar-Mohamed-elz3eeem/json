@@ -446,8 +446,12 @@ namespace JSON
 				return impl_->booleanValue == other.impl_->booleanValue;
 			case Impl::Type::String:
 				return *impl_->stringValue == *other.impl_->stringValue;
+			case Impl::Type::Integer:
+				return impl_->integerValue == other.impl_->integerValue;
+			case Impl::Type::FloatingPoint:
+				return impl_->floatingPointValue == other.impl_->floatingPointValue;
 			default:
-				return true;
+				return false;
 		}
 	}
 
