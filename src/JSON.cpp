@@ -111,6 +111,41 @@ namespace JSON
 		}
 	}
 
+	JSON::operator bool() const
+	{
+		if (impl_->type == Impl::Type::Boolean)
+			return impl_->booleanValue;
+		else
+			return false;
+	}
+
+	JSON::operator std::string() const
+	{
+		if (impl_->type == Impl::Type::String)
+			return (*impl_->stringValue);
+		else
+			return ("");
+	}
+
+	JSON::operator int() const
+	{
+		if (impl_->type == Impl::Type::Integer)
+			return impl_->integerValue;
+		else if (impl_->type == Impl::Type::FloatingPoint)
+			return (int)impl_->floatingPointValue;
+		else
+			return 0;
+	}
+
+	JSON::operator double() const
+	{
+		if (impl_->type == Impl::Type::FloatingPoint)
+			return (impl_->floatingPointValue);
+		else if (impl_->type == Impl::Type::Integer)
+			return (double)impl_->integerValue;
+		else
+			return (0.0);
+	}
 
 	JSON::JSON(): impl_(new Impl())
 	{}
