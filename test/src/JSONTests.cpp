@@ -12,6 +12,7 @@
 
 #include <gtest/gtest.h>
 #include <JSON/JSON.hpp>
+#include <string>
 
 TEST(JSONTests, FromNull)
 {
@@ -47,6 +48,25 @@ TEST(JSONTests, NotBooleanDownCastToBoolean)
 {
 	EXPECT_EQ(false, (bool)JSON::JSON(nullptr));
 	EXPECT_EQ(false, (bool)JSON::JSON(std::string("")));
+}
+
+TEST(JSONTests, NotIntegerDownCaseToInteger)
+{
+	EXPECT_EQ(0, (int)JSON::JSON(nullptr));
+	EXPECT_EQ(0, (int)JSON::JSON(false));
+	EXPECT_EQ(0, (int)JSON::JSON(true));
+	EXPECT_EQ(0, (int)JSON::JSON("26"));
+	EXPECT_EQ(26, (int)JSON::JSON(26.0));
+	EXPECT_EQ(26, (int)JSON::JSON(26.5));
+}
+
+TEST(JSONTests, NotFloatingPointDownCaseToFloatingPoint)
+{
+	EXPECT_EQ(0.0, (double)JSON::JSON(nullptr));
+	EXPECT_EQ(0.0, (double)JSON::JSON(false));
+	EXPECT_EQ(0.0, (double)JSON::JSON(true));
+	EXPECT_EQ(0.0, (double)JSON::JSON("26"));
+	EXPECT_EQ(26.0, (double)JSON::JSON(26));
 }
 
 TEST(JSONTests, NotStringDownCastedToString)
@@ -112,4 +132,26 @@ TEST(JSONTests, BadlyEscapedCharacters)
 	EXPECT_EQ("This is bad: \\x", (std::string)json);
 }
 
+TEST(JSONTests, FromInteger)
+{
+	JSON::JSON json(26);
+	ASSERT_EQ("26", json.ToString());
+}
+
+TEST(JSONTests, ToInteger)
+{
+	auto json = JSON::JSON::FromString("26");
+	ASSERT_TRUE((int)json == 26);
+}
+
+TEST(JSONTests, FromFloatingPoint)
+{
+	JSON::JSON json(3.14159);
+	ASSERT_EQ("3.141590", json.ToString());
+}
+
+TEST(JSONTests, ToFloatingPoint)
+{
+	const auto json = JSON::JSON::FromString("3.14159");
+	ASSERT_TRUE((double)json == 3.14159);
 }
