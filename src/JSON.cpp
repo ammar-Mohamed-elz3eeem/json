@@ -11,6 +11,252 @@
  */
 
 #include <JSON/JSON.hpp>
+#include <Utf8/Utf8.hpp>
+#include <map>
+#include <vector>
+#include <math.h>
+
+namespace
+{
+	/**
+	 * @brief
+	 *     This maps escaped representations of special characters back
+	 *     to the actual characters they represent.
+	 */
+	std::map<Utf8::UnicodeCodePoint, Utf8::UnicodeCodePoint> SPECIAL_ESCAPE_DECODINGS{
+		{ 0x22, 0x22  }, // """
+		{ 0x5C, 0x5C  }, // "\"
+		{ 0x2F, 0x2F  }, // "\"
+		{ 0x62, 0x08  }, // "\b"
+		{ 0x66, 0x0C  }, // "\f"
+		{ 0x6E, 0x0A  }, // "\n"
+		{ 0x72, 0x0D  }, // "\r"
+		{ 0x74, 0x09  }  // "\t"
+	};
+
+	/**
+	 * @brief
+	 *     This maps special characters to their escaped representations.
+	 */
+	std::map<Utf8::UnicodeCodePoint, Utf8::UnicodeCodePoint> SPECIAL_ESCAPE_ENCODINGS{
+		{ 0x22, 0x22  }, // """
+		{ 0x5C, 0x5C  }, // "\"
+		{ 0x2F, 0x2F  }, // "\"
+		{ 0x08, 0x62  }, // "\b"
+		{ 0x0C, 0x66  }, // "\f"
+		{ 0x0A, 0x6E  }, // "\n"
+		{ 0x0D, 0x72  }, // "\r"
+		{ 0x09, 0x74  }  // "\t"
+	};
+
+	/**
+	 * @brief
+	 *     convert a code point to four hexadecimal digits string.
+	 * 
+	 * @param codepoint 
+	 *     This is the code point to render as four hex digits.
+	 * 
+	 * @returns
+	 *     String consisting of four hex digits which renders
+	 *     the code point.
+	 */
+	std::string codepointToFourHexDigits(Utf8::UnicodeCodePoint codepoint)
+	{
+		std::string fourHexDigits;
+		for (size_t i = 0; i < 4; ++i)
+		{
+			const auto nibble = (codepoint >> (4 * (3 - i)) & 0x0F);
+			if (nibble < 10)
+				fourHexDigits += (char)(nibble + '0');
+			else
+				fourHexDigits += (char)(nibble - 10) + 'A';
+		}
+		return fourHexDigits;
+	}
+
+	/**
+	 * @brief
+	 *     This function produces the escaped version of the
+	 *     given string.
+	 * 
+	 * @param[in] s
+	 *     This is the string which we need to be escaped.
+	 * 
+	 * @param[in] options
+	 *     This is used to configure the various options
+	 *     having to do with encoding a JSON object into
+	 *     its string format.
+	 * 
+	 * @return
+	 *     The escaped version of the given string.
+	 */
+	std::string escape(
+		const std::string &s,
+		const JSON::EncodingOptions &options
+	) {
+		Utf8::Utf8 decoder, encoder;
+		std::string output;
+		for (const auto codepoint: decoder.decode(s))
+		{
+			if (
+				(codepoint == 0x22) ||
+				(codepoint == 0x5C) ||
+				(codepoint < 0x20)
+			) {
+				output += '\\';
+				const auto entry = SPECIAL_ESCAPE_ENCODINGS.find(codepoint);
+				if (entry == SPECIAL_ESCAPE_ENCODINGS.end())
+				{
+					output += 'u';
+					output += codepointToFourHexDigits(codepoint);
+				}
+				else
+				{
+					output += (char)entry->second;
+				}
+				// output += (char)codepoint;
+			}
+			else if (
+				options.escapeNonAscii &&
+				(codepoint > 0x7F)
+			) {
+				output += "\\u";
+				output += codepointToFourHexDigits(codepoint);
+			}
+			else
+			{
+				const auto encoded = encoder.encode({ codepoint });
+				output += std::string(encoded.begin(), encoded.end());
+			}
+		}
+		return output;
+	}
+
+	/**
+	 * @brief
+	 *     This function produces the unescaped version of the
+	 *     given string.
+	 * 
+	 * @param[in] s
+	 *     This is the string which we need to be unescaped.
+	 * 
+	 * @return
+	 *     The unescaped version of the given string.
+	 */
+	std::string unescape(
+		const std::string &s
+	) {
+		Utf8::Utf8 decoder, encoder;
+		std::string output;
+		size_t state = 0;
+		Utf8::UnicodeCodePoint cpFromHexDigit = 0;
+		std::vector<Utf8::UnicodeCodePoint> hexDigitsOriginal;
+		for (const auto codepoint: decoder.decode(s))
+		{
+			switch (state)
+			{
+			case 0: /// Initial State
+				{
+					if (codepoint == 0x5C)
+					{
+						state = 1;
+					}
+					else
+					{
+						const auto encoded = encoder.encode({ codepoint });
+						output += std::string(encoded.begin(), encoded.end());
+					}
+				}
+				break;
+
+			case 1: /// Escape character
+				{
+					if (codepoint == 0x75)
+					{
+						state = 2;
+						cpFromHexDigit = 0;
+						hexDigitsOriginal = {0x5C, 0x75};
+					}
+					else
+					{
+						Utf8::UnicodeCodePoint alternative = codepoint;
+						const auto entry = SPECIAL_ESCAPE_DECODINGS.find(codepoint);
+						if (entry == SPECIAL_ESCAPE_DECODINGS.end())
+						{
+							const auto encoded = encoder.encode({ 0x5C, codepoint });
+							output += std::string(encoded.begin(), encoded.end());
+						}
+						else
+						{
+							const auto encoded = encoder.encode({ entry->second });
+							output += std::string(encoded.begin(), encoded.end());
+						}
+						state = 0;
+					}
+				}
+				break;
+			
+			case 2: // First HexDigit
+			case 3: // Second HexDigit
+			case 4: // Third HexDigit
+			case 5: // Fourth HexDigit
+				{
+					hexDigitsOriginal.push_back(codepoint);
+					cpFromHexDigit <<= 4;
+					if (
+						(codepoint >= (Utf8::UnicodeCodePoint)'0') &&
+						(codepoint <= (Utf8::UnicodeCodePoint)'9')
+					) {
+						cpFromHexDigit += (codepoint - (Utf8::UnicodeCodePoint)'0');
+					} else if (
+						(codepoint >= (Utf8::UnicodeCodePoint)'A') &&
+						(codepoint <= (Utf8::UnicodeCodePoint)'F')
+					) {
+						cpFromHexDigit += (codepoint - (Utf8::UnicodeCodePoint)'A' + 10);
+					} else if (
+						(codepoint >= (Utf8::UnicodeCodePoint)'a') &&
+						(codepoint <= (Utf8::UnicodeCodePoint)'f')
+					) {
+						cpFromHexDigit += (codepoint - (Utf8::UnicodeCodePoint)'a' + 10);
+					}
+					else
+					{
+						state = 0;
+						const auto encoded = encoder.encode(hexDigitsOriginal);
+						output += std::string(encoded.begin(), encoded.end());
+						break;
+					}
+					if (++state == 6)
+					{
+						state = 0;
+						const auto encoded = encoder.encode({ cpFromHexDigit });
+						output += std::string(encoded.begin(), encoded.end());
+					}
+				}
+				break;
+			}
+		}
+		switch (state)
+		{
+		case 1:
+			{
+				const auto encoded = encoder.encode({ 0x75 });
+				output += std::string(encoded.begin(), encoded.end());
+			}
+			break;
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			{
+				const auto encoded = encoder.encode(hexDigitsOriginal);
+				output += std::string(encoded.begin(), encoded.end());
+			}
+			break;
+		}
+		return output;
+	}
+}
 
 namespace JSON
 {
@@ -192,4 +438,41 @@ namespace JSON
 		impl_->floatingPointValue = value;
 	}
 
+	std::string JSON::ToString(const EncodingOptions &options) const
+	{
+		switch (impl_->type)
+		{
+			case Impl::Type::Null:
+				return "null";
+			case Impl::Type::Boolean:
+				return impl_->booleanValue ? "true" : "false";
+			case Impl::Type::String:
+				return (
+					"\""
+					+ escape(*impl_->stringValue, options)
+					+ "\""
+				);
+			case Impl::Type::Integer:
+				return StringExtensions::sprintf("%d", impl_->integerValue);
+			case Impl::Type::FloatingPoint:
+				return StringExtensions::sprintf("%lf", impl_->floatingPointValue);
+			default:
+				return "";
+		}
+	}
+
+	JSON JSON::FromString(const std::string &format)
+	{
+
+		if (format == "true")
+			return true;
+		else if (format == "false")
+			return false;
+		else if (format == "null")
+			return nullptr;
+		else if (!format.empty() && format[0] == '"' && format[format.length() - 1] == '"')
+			return unescape(format.substr(1, format.length() - 2));
+		else
+			return JSON();
+	}
 } // namespace JSON
