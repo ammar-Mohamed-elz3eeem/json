@@ -21,7 +21,42 @@ namespace JSON
 	 */
 	struct JSON::Impl
 	{
+		// Types
+
+		/**
+		 * @brief
+		 *     These are the different kinds of values that
+		 *     a JSON object can be.
+		 */
+		enum class Type
+		{
+			Null,
+			Boolean,
+			String,
+			Integer,
+			FloatingPoint
+		};
+
+		/**
+		 * @brief
+		 *     This holds the actual value represented by the
+		 *     JSON object. Use the member that matches the type.
+		 */
+		union
+		{
+			bool booleanValue;
+			std::string *stringValue;
+			int integerValue;
+			double floatingPointValue;
+		};
+		
 		// Properties
+		/**
+		 * @brief
+		 *     This indicates the type of the value represented
+		 *     by the JSON object.
+		 */
+		Type type = Type::Null;
 
 		// Methods
 	};
