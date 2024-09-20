@@ -283,9 +283,9 @@ namespace JSON
 		 *     by parsing the JSON object from the given format
 		 *     string.
 		 * 
-		 * @param[in] format
+		 * @param[in] formatBeforeTrim
 		 *     This is the string format of the JSON object to
-		 *     construct.
+		 *     construct, it may contain whitespace characters.
 		 * 
 		 * @return
 		 *     new JSON object constructed by parsing the JSON

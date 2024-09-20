@@ -19,6 +19,8 @@
 
 namespace
 {
+	constexpr const char *WHITESPACES = " \t\r\n";
+
 	/**
 	 * @brief
 	 *     This maps escaped representations of special characters back
@@ -879,9 +881,17 @@ namespace JSON
 		return impl_->encoding;
 	}
 
-	JSON JSON::FromString(const std::string &format)
+	JSON JSON::FromString(const std::string &formatBeforeTrim)
 	{
 		JSON json;
+		const auto firstNonWhitespaceChar = formatBeforeTrim.find_first_not_of(WHITESPACES);
+		if (firstNonWhitespaceChar == std::string::npos)
+			return json;
+		const auto lastNonWhitespaceChar = formatBeforeTrim.find_last_not_of(WHITESPACES);
+		const auto format = formatBeforeTrim.substr(
+			firstNonWhitespaceChar,
+			lastNonWhitespaceChar - firstNonWhitespaceChar + 1
+		);
 		json.impl_->encoding = format;
 		if (format.empty() || format[0] == '{')
 		{
