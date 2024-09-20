@@ -58,6 +58,24 @@ namespace JSON
 	class JSON
 	{
 	public:
+		// Types
+
+		/**
+		 * @brief
+		 *     These are the different kinds of values that
+		 *     a JSON object can be.
+		 */
+		enum class Type
+		{
+			Invalid,
+			Null,
+			Boolean,
+			String,
+			Integer,
+			FloatingPoint,
+			Array
+		};
+
 		// Lifecycle Management
 
 		~JSON() noexcept;
@@ -140,6 +158,23 @@ namespace JSON
 
 		/**
 		 * @brief
+		 *     This method returns the element at the given index
+		 *     of the json value, if it's an array.
+		 *
+		 * @param[in] index
+		 *     The index of the element in the json array value.
+		 *
+		 * @return
+		 *     the element at the given index
+		 *
+		 * @retval nullptr
+		 *     This value is returned if there is no element at
+		 *     the given index, or the json value is not array.
+		 */
+		std::shared_ptr<JSON> operator[](size_t) const;
+
+		/**
+		 * @brief
 		 *     Construct a new JSON object
 		 */
 		JSON();
@@ -206,6 +241,29 @@ namespace JSON
 
 		/**
 		 * @brief
+		 *     This method returns the type of the json value.
+		 *
+		 * @return
+		 *     type of the json value.
+		 */
+		Type getType() const;
+
+		/**
+		 * @brief
+		 *     This method returns the size of the json value
+		 *     if only it is an array.
+		 *
+		 * @return
+		 *     size of the json value if only it is an array.
+		 *
+		 * @retval 0
+		 *     is returned if the json value is not an array
+		 *     or it is an empty array. 
+		 */
+		size_t getSize() const;
+
+		/**
+		 * @brief
 		 *     This encodes the JSON object into its string
 		 *     format
 		 * 
@@ -267,6 +325,22 @@ namespace JSON
 	 */
 	void PrintTo(
 		const JSON &json,
+		std::ostream *os);
+
+	/**
+	 * @brief
+	 *     This is a support function for Google tests
+	 *     to print out the actual value of JSON::Type object.
+	 *
+	 * @param[in] type
+	 *     This is the json object type we need its value.
+	 *
+	 * @param[in,out] os
+	 *     This points to the stream in which we print the
+	 *     json type.
+	 */
+	void PrintTo(
+		const JSON::Type &type,
 		std::ostream *os);
 
 } // namespace JSON

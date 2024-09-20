@@ -15,6 +15,7 @@
 #include <map>
 #include <vector>
 #include <math.h>
+#include <stack>
 
 namespace
 {
@@ -311,21 +312,6 @@ namespace JSON
 
 		/**
 		 * @brief
-		 *     These are the different kinds of values that
-		 *     a JSON object can be.
-		 */
-		enum class Type
-		{
-			Invalid,
-			Null,
-			Boolean,
-			String,
-			Integer,
-			FloatingPoint
-		};
-
-		/**
-		 * @brief
 		 *     This holds the actual value represented by the
 		 *     JSON object. Use the member that matches the type.
 		 */
@@ -335,6 +321,7 @@ namespace JSON
 			std::string *stringValue;
 			int integerValue;
 			double floatingPointValue;
+			std::vector<std::shared_ptr<JSON>> *arrayValues;
 		};
 
 		// Properties
@@ -383,13 +370,10 @@ namespace JSON
 
 		/**
 		 * @brief
-		 *     This parses the given string as an integer value.
+		 *     This parses the given string as an integer JSON value.
 		 *
 		 * @param[in] s
 		 *     This is the string we want to parse to integer.
-		 *
-		 * @return
-		 *     The integer value that is equivalent to given string.
 		 */
 		void parseAsInt(const std::string &s) {
 			size_t index = 0;
@@ -462,13 +446,10 @@ namespace JSON
 
 		/**
 		 * @brief
-		 *     This parses the given string as a double value.
+		 *     This parses the given string as a double JSON value.
 		 *
 		 * @param[in] s
 		 *     This is the string we want to parse to float.
-		 *
-		 * @return
-		 *     The double value that is equivalent to given string.
 		 */
 		void parseAsFloat(const std::string &s)
 		{
@@ -622,6 +603,111 @@ namespace JSON
 				// );
 		}
 
+		/**
+		 * @brief
+		 *     This function extracts the encoding of the next JSON
+		 *     value in the given string, updating the given offset
+		 *     where the end of the value was found, or whether the
+		 *     encoding was invalid.
+		 *
+		 * @param[in] s
+		 *     This is the string to parse to extract json value from.
+		 *
+		 * @param[in,out] offset
+		 *     On input, this is the position of the first character
+		 *     of the encoded in the given string,
+		 *     On output, this is the position of the first character
+		 *     past the end the encoded in the given string or
+		 *     std::string::npos if the encoded value was invalid.
+		 *
+		 * @return
+		 *     The actual value that will be assigned to json value.
+		 */
+		std::string parseValue(
+			const std::string &s,
+			size_t &offset
+		) {
+			Utf8::Utf8 decoder, encoder;
+			std::stack<char> expectedDelims;
+			std::vector<Utf8::UnicodeCodePoint> encodedValueCodepoints;
+			const auto encodingCodepoints = decoder.decode(s.substr(offset));
+			if (encodingCodepoints.empty())
+			{
+				offset = std::string::npos;
+				return "";
+			}
+			bool insideString = false;
+			for (const auto codepoint: encodingCodepoints)
+			{
+				encodedValueCodepoints.push_back(codepoint);
+				if (
+					(!expectedDelims.empty()) &&
+					(codepoint == expectedDelims.top())
+				) {
+					insideString = false;
+					expectedDelims.pop();
+					continue;
+				}
+				if (!insideString)
+				{
+					if (codepoint == (Utf8::UnicodeCodePoint)'\"')
+					{
+						expectedDelims.push('\"');
+						insideString = true;
+					}
+					else if (codepoint == (Utf8::UnicodeCodePoint)'[')
+					{
+						expectedDelims.push(']');
+					}
+					else if (
+						codepoint == (Utf8::UnicodeCodePoint)',' &&
+						expectedDelims.empty()
+					) {
+						break;
+					}
+				}
+			}
+			if (expectedDelims.empty())
+			{
+				auto encodedValue = encoder.encode(encodedValueCodepoints);
+				if (encodedValue.back() == (Utf8::UnicodeCodePoint)',')
+				{
+					encodedValue.pop_back();
+				}
+				offset += encodedValueCodepoints.size();
+				return std::string(
+					encodedValue.begin(),
+					encodedValue.end());
+			}
+			else
+			{
+				offset = std::string::npos;
+				return "";
+			}
+		}
+
+		/**
+		 * @brief
+		 *     This parses the given string as an array JSON value.
+		 *
+		 * @param[in] s
+		 *     This is the string we want to parse to float.
+		 */
+		void parseAsArray(const std::string &s)
+		{
+			size_t offset = 0;
+			std::vector<std::shared_ptr<JSON>> newArrValues;
+			while (offset < s.length())
+			{
+				const auto encodedValue = parseValue(s, offset);
+				if (offset == std::string::npos)
+					return;
+				const auto value = std::make_shared<JSON>(FromString(encodedValue));
+				newArrValues.push_back(value);
+			}
+			type = Type::Array;
+			arrayValues = new decltype(newArrValues)(newArrValues);
+		}
 	};
 
 	JSON::~JSON() = default;
@@ -634,17 +720,17 @@ namespace JSON
 			return false;
 		else switch (impl_->type)
 		{
-			case Impl::Type::Invalid:
+			case Type::Invalid:
 				return true;
-			case Impl::Type::Null:
+			case Type::Null:
 				return true;
-			case Impl::Type::Boolean:
+			case Type::Boolean:
 				return impl_->booleanValue == other.impl_->booleanValue;
-			case Impl::Type::String:
+			case Type::String:
 				return *impl_->stringValue == *other.impl_->stringValue;
-			case Impl::Type::Integer:
+			case Type::Integer:
 				return impl_->integerValue == other.impl_->integerValue;
-			case Impl::Type::FloatingPoint:
+			case Type::FloatingPoint:
 				return impl_->floatingPointValue == other.impl_->floatingPointValue;
 			default:
 				return false;
@@ -653,7 +739,7 @@ namespace JSON
 
 	JSON::operator bool() const
 	{
-		if (impl_->type == Impl::Type::Boolean)
+		if (impl_->type == Type::Boolean)
 			return impl_->booleanValue;
 		else
 			return false;
@@ -661,7 +747,7 @@ namespace JSON
 
 	JSON::operator std::string() const
 	{
-		if (impl_->type == Impl::Type::String)
+		if (impl_->type == Type::String)
 			return (*impl_->stringValue);
 		else
 			return ("");
@@ -669,9 +755,9 @@ namespace JSON
 
 	JSON::operator int() const
 	{
-		if (impl_->type == Impl::Type::Integer)
+		if (impl_->type == Type::Integer)
 			return impl_->integerValue;
-		else if (impl_->type == Impl::Type::FloatingPoint)
+		else if (impl_->type == Type::FloatingPoint)
 			return (int)impl_->floatingPointValue;
 		else
 			return 0;
@@ -679,12 +765,19 @@ namespace JSON
 
 	JSON::operator double() const
 	{
-		if (impl_->type == Impl::Type::FloatingPoint)
+		if (impl_->type == Type::FloatingPoint)
 			return (impl_->floatingPointValue);
-		else if (impl_->type == Impl::Type::Integer)
+		else if (impl_->type == Type::Integer)
 			return (double)impl_->integerValue;
 		else
 			return (0.0);
+	}
+
+	std::shared_ptr<JSON> JSON::operator[](size_t index) const
+	{
+		if (impl_->type == Type::Array)
+			return (*impl_->arrayValues)[index];
+		return std::make_shared<JSON>();
 	}
 
 	JSON::JSON()
@@ -694,47 +787,59 @@ namespace JSON
 	JSON::JSON(nullptr_t)
 		: impl_(new Impl())
 	{
-		impl_->type = Impl::Type::Null;
+		impl_->type = Type::Null;
 	}
 
 	JSON::JSON(bool value)
 		: impl_(new Impl())
 	{
-		impl_->type = Impl::Type::Boolean;
+		impl_->type = Type::Boolean;
 		impl_->booleanValue = value;
 	}
 
 	JSON::JSON(const std::string &value)
 		: impl_(new Impl())
 	{
-		impl_->type = Impl::Type::String;
+		impl_->type = Type::String;
 		impl_->stringValue = new std::string(value);
 	}
 
 	JSON::JSON(const char* value)
 		: impl_(new Impl())
 	{
-		impl_->type = Impl::Type::String;
+		impl_->type = Type::String;
 		impl_->stringValue = new std::string(value);
 	}
 
 	JSON::JSON(int value)
 		: impl_(new Impl())
 	{
-		impl_->type = Impl::Type::Integer;
+		impl_->type = Type::Integer;
 		impl_->integerValue = value;
 	}
 
 	JSON::JSON(double value)
 		: impl_(new Impl())
 	{
-		impl_->type = Impl::Type::FloatingPoint;
+		impl_->type = Type::FloatingPoint;
 		impl_->floatingPointValue = value;
+	}
+
+	auto JSON::getType() const -> Type
+	{
+		return impl_->type;
+	}
+
+	size_t JSON::getSize() const
+	{
+		if (impl_->type == Type::Array)
+			return impl_->arrayValues->size();
+		return 0;
 	}
 
 	std::string JSON::ToString(const EncodingOptions &options) const
 	{
-		if (impl_->type == Impl::Type::Invalid)
+		if (impl_->type == Type::Invalid)
 		{
 			return StringExtensions::sprintf(
 				"(Invalid JSON: %s)",
@@ -748,23 +853,23 @@ namespace JSON
 		{
 			switch (impl_->type)
 			{
-				case Impl::Type::Null:
+				case Type::Null:
 					impl_->encoding = "null";
 					break;
-				case Impl::Type::Boolean:
+				case Type::Boolean:
 					impl_->encoding = impl_->booleanValue ? "true" : "false";
 					break;
-				case Impl::Type::String:
+				case Type::String:
 					impl_->encoding = (
 						"\""
 						+ escape(*impl_->stringValue, options)
 						+ "\""
 					);
 					break;
-				case Impl::Type::Integer:
+				case Type::Integer:
 					impl_->encoding = StringExtensions::sprintf("%d", impl_->integerValue);
 					break;
-				case Impl::Type::FloatingPoint:
+				case Type::FloatingPoint:
 					impl_->encoding = StringExtensions::sprintf("%lg", impl_->floatingPointValue);
 					break;
 				default:
@@ -778,31 +883,33 @@ namespace JSON
 	{
 		JSON json;
 		json.impl_->encoding = format;
-		if (format.empty() || format[0] == '{' || format[0] == '[')
+		if (format.empty() || format[0] == '{')
 		{
 			return json;
 		}
+		if (format[0] == '[' && format[format.length() - 1] == ']')
+			json.impl_->parseAsArray(format.substr(1, format.length() - 2));
 		else if (format[0] == '"' && format[format.length() - 1] == '"')
 		{
 			std::string output;
 			if (unescape(format.substr(1, format.length() - 2), output))
 			{
-				json.impl_->type = Impl::Type::String;
+				json.impl_->type = Type::String;
 				json.impl_->stringValue = new std::string(output);
 			}
 		}
 		else if (format == "null")
 		{
-			json.impl_->type = Impl::Type::Null;
+			json.impl_->type = Type::Null;
 		}
 		else if (format == "true")
 		{
-			json.impl_->type = Impl::Type::Boolean;
+			json.impl_->type = Type::Boolean;
 			json.impl_->booleanValue = true;
 		}
 		else if (format == "false")
 		{
-			json.impl_->type = Impl::Type::Boolean;
+			json.impl_->type = Type::Boolean;
 			json.impl_->booleanValue = false;
 		}
 		else
@@ -824,5 +931,37 @@ namespace JSON
 		std::ostream *os
 	) {
 		*os << json.ToString();
+	}
+
+	void PrintTo(
+		const JSON::Type &type,
+		std::ostream *os)
+	{
+		switch (type)
+		{
+			case JSON::Type::Array:
+				*os << "ARRAY";
+				break;
+			case JSON::Type::Boolean:
+				*os << "BOOLEAN";
+				break;
+			case JSON::Type::FloatingPoint:
+				*os << "DOUBLE";
+				break;
+			case JSON::Type::Integer:
+				*os << "INTEGER";
+				break;
+			case JSON::Type::Invalid :
+				*os << "INVALID";
+				break;
+			case JSON::Type::Null:
+				*os << "NULL";
+				break;
+			case JSON::Type::String :
+				*os << "STRING";
+				break;
+			default:
+				*os << "???";
+		}
 	}
 } // namespace JSON

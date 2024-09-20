@@ -241,3 +241,58 @@ TEST(JSONTests, EncodingOfInvalidJson)
 	auto json = JSON::JSON::FromString("\"This is bad: \\u123X\"");
 	ASSERT_EQ("(Invalid JSON: \"This is bad: \\u123X\")", json.ToString());
 }
+
+TEST(JSONTests, DecodeArray)
+{
+	const std::string encoding("[1,\"Hello\",true]");
+	const auto json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Array);
+	ASSERT_EQ(3, json.getSize());
+	EXPECT_EQ(1, (int)*json[0]);
+	EXPECT_EQ(json[0]->getType(), JSON::JSON::Type::Integer);
+	EXPECT_EQ("Hello", (std::string)*json[1]);
+	EXPECT_EQ(json[1]->getType(), JSON::JSON::Type::String);
+	EXPECT_EQ(true, (bool)*json[2]);
+	EXPECT_EQ(json[2]->getType(), JSON::JSON::Type::Boolean);
+}
+
+TEST(JSONTests, DecodeArraysWithinArray)
+{
+	const std::string encoding("[1,[2,3],4,[\"Hello\",true]]");
+	const auto json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Array);
+	ASSERT_EQ(4, json.getSize());
+	EXPECT_EQ(json[0]->getType(), JSON::JSON::Type::Integer);
+	EXPECT_EQ(1, (int)*json[0]);
+
+	EXPECT_EQ(json[1]->getType(), JSON::JSON::Type::Array);
+	EXPECT_EQ(json[1]->getSize(), 2);
+	EXPECT_EQ((int)(*(*json[1])[0]), 2);
+	EXPECT_EQ((*json[1])[0]->getType(), JSON::JSON::Type::Integer);
+	EXPECT_EQ((int)(*(*json[1])[1]), 3);
+	EXPECT_EQ((*json[1])[1]->getType(), JSON::JSON::Type::Integer);
+
+	EXPECT_EQ(json[2]->getType(), JSON::JSON::Type::Integer);
+	EXPECT_EQ((int)*json[2], 4);
+
+	EXPECT_EQ(json[3]->getType(), JSON::JSON::Type::Array);
+	EXPECT_EQ(json[3]->getSize(), 2);
+	EXPECT_EQ((std::string)(*(*json[3])[0]), "Hello");
+	EXPECT_EQ((*json[3])[0]->getType(), JSON::JSON::Type::String);
+	EXPECT_EQ((bool)(*(*json[3])[1]), true);
+	EXPECT_EQ((*json[3])[1]->getType(), JSON::JSON::Type::Boolean);
+}
+
+TEST(JSONTests, DecodeUnterminatedOuterArray)
+{
+	const std::string encoding("[1,\"Hello\",true");
+	const auto json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Invalid);
+}
+
+TEST(JSONTests, DecodeUnterminatedInnerStringInInnerArray)
+{
+	const std::string encoding("[1,[2,3],4,[\"Hello,true], 5]");
+	const auto json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Invalid);
+}
