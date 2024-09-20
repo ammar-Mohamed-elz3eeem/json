@@ -76,240 +76,6 @@ namespace
 
 	/**
 	 * @brief
-	 *     This parses the given string as an integer value.
-	 *
-	 * @param[in] s
-	 *     This is the string to be parsed.
-	 *
-	 * @return
-	 *     The integer value that is equivalent to given string.
-	 */
-	JSON::JSON parseInt(const std::string &s)
-	{
-		size_t index = 0;
-		size_t state = 0;
-		bool negative = false;
-		int value = 0;
-		while (index < s.length())
-		{
-			switch (state)
-			{
-				case 0: // [ minus ]
-					{
-						if (s[index] == '-')
-						{
-							negative = true;
-							++index;
-						}
-						state = 1;
-					}
-					break;
-
-				case 1: // integral part
-					{
-						if (s[index] == 0)
-						{
-							state = 2;
-						}
-						else if (s[index] >= '1' && s[index] <= '9')
-						{
-							state = 3;
-							value += (int)(s[index] - '0');
-						}
-						else
-							return JSON::JSON();
-						++index;
-					}
-					break;
-
-				case 2: // Invalid value for number
-					return JSON::JSON();
-					break;
-
-				case 3: // *DIGIT (1-9)
-					{
-						const int previousValue = value;
-						if (s[index] >= '1' && s[index] <= '9')
-						{
-							value *= 10;
-							value += (int)(s[index] - '0');
-							if (value / 10 != previousValue)
-							{
-								return JSON::JSON();
-							}
-						}
-						else
-						{
-							return JSON::JSON();
-						}
-						index++;
-					}
-					break;
-			}
-		}
-		if (state < 2)
-			return JSON::JSON();
-		else
-			return (JSON::JSON(value * (negative ? -1 : 1)));
-	}
-
-	/**
-	 * @brief
-	 *     This parses the given string as a double value.
-	 *
-	 * @param[in] s
-	 *     This is the string to be parsed.
-	 *
-	 * @return
-	 *     The double value that is equivalent to given string.
-	 */
-	JSON::JSON parseFloat(const std::string &s)
-	{
-		size_t index = 0;
-		size_t state = 0;
-		bool negative = false;
-		bool negativeMagnitude = false;
-		bool negativeExponent = false;
-		double magnitude = 0.0;
-		double fraction = 0.0;
-		double exponent = 0.0;
-		size_t fractionDigits = 0;
-		while (index < s.length())
-		{
-			switch (state)
-			{
-				case 0: // [ minus ]
-					{
-						if (s[index] == '-')
-						{
-							negativeMagnitude = true;
-							++index;
-						}
-						state = 1;
-					}
-					break;
-
-				case 1: // integral part
-					{
-						if (s[index] == 0)
-						{
-							state = 2;
-						}
-						else if (s[index] >= '0' && s[index] <= '9')
-						{
-							state = 3;
-							magnitude += (double)(s[index] - '0');
-						}
-						else
-							return JSON::JSON();
-						++index;
-					}
-					break;
-
-				case 2: // Invalid value for number
-					return JSON::JSON();
-					break;
-
-				case 3: // *DIGIT (1-9)
-					{
-						if (s[index] >= '0' && s[index] <= '9')
-						{
-							magnitude *= 10.0;
-							magnitude += (double)(s[index] - '0');
-						}
-						else if (s[index] == '.')
-						{
-							state = 4;
-						}
-						else if (s[index] == 'e' || s[index] == 'E')
-						{
-							state = 6;
-						}
-						else
-						{
-							return JSON::JSON();
-						}
-						index++;
-					}
-					break;
-				case 4: // Fractional part: consists of one digit (0-9)
-					{
-						if (s[index] >= '0' && s[index] <= '9')
-						{
-							++fractionDigits;
-							fraction += (double)(s[index] - '0') * pow(10.0, -(double)fractionDigits);
-						}
-						else
-						{
-							return JSON::JSON();
-						}
-						state = 5;
-						++index;
-					}
-					break;
-				case 5: // Fractional part: consists of optional digits (0-9) or e or E
-					{
-						if (s[index] >= '0' && s[index] <= '9')
-						{
-							++fractionDigits;
-							fraction += (double)(s[index] - '0') * pow(10.0, -(double)fractionDigits);
-						}
-						else if (s[index] == 'e' || s[index] == 'E')
-						{
-							state = 6;
-						}
-						else
-						{
-							return JSON::JSON();
-						}
-						++index;
-					}
-					break;
-				case 6: // Exponential part: consists of [plus|minus] 1*DIGIT (0-9)
-					{
-						if (s[index] == '-')
-						{
-							negativeExponent = true;
-							++index;
-						}
-						else if (s[index] == '+')
-							++index;
-						state = 7;
-					}
-					break;
-				case 7: // Exponential part: required DIGIT (0-9)
-					{
-						state = 8;
-					}
-					break;
-				case 8: // Exponential part: Extra DIGITs (0-9)
-					{
-						if (s[index] >= '0' && s[index] <= '9')
-						{
-							exponent *= 10.0;
-							exponent += (double)(s[index] - '0');
-						}
-						else
-						{
-							return JSON::JSON();
-						}
-						++index;
-					}
-					break;
-			}
-		}
-		if ((state < 2) || (state == 4) || (state == 6) || (state == 7))
-			return JSON::JSON();
-		else
-			return JSON::JSON(
-				(magnitude + fraction) *
-				pow(10.0, (negativeExponent ? -1.0 : 1.0) * exponent) *
-				(negativeMagnitude ? -1.0 : 1.0)
-			);
-	}
-
-	/**
-	 * @brief
 	 *     This function produces the escaped version of the
 	 *     given string.
 	 * 
@@ -384,14 +150,18 @@ namespace
 	 * @param[in] s
 	 *     This is the string which we need to be unescaped.
 	 * 
+	 * @param[out] output
+	 *     This is the string in which we put the unescaped
+	 *     version on the given string.
+	 * 
 	 * @return
 	 *     The unescaped version of the given string.
 	 */
-	std::string unescape(
-		const std::string &s
+	bool unescape(
+		const std::string &s,
+		std::string &output
 	) {
 		Utf8::Utf8 decoder, encoder;
-		std::string output;
 		size_t state = 0;
 		Utf8::UnicodeCodePoint cpFromHexDigit = 0;
 		Utf8::UnicodeCodePoint firstHalfOfSurrogatePair = 0;
@@ -413,7 +183,7 @@ namespace
 					}
 					else
 					{
-						firstHalfOfSurrogatePair = 0;
+						return false;
 					}
 				}
 				break;
@@ -432,19 +202,15 @@ namespace
 						const auto entry = SPECIAL_ESCAPE_DECODINGS.find(codepoint);
 						if (entry == SPECIAL_ESCAPE_DECODINGS.end())
 						{
-							const auto encoded = encoder.encode({ 0x5C, codepoint });
-							output += std::string(encoded.begin(), encoded.end());
+							return false;
 						}
-						else
-						{
-							const auto encoded = encoder.encode({ entry->second });
-							output += std::string(encoded.begin(), encoded.end());
-						}
+						const auto encoded = encoder.encode({ entry->second });
+						output += std::string(encoded.begin(), encoded.end());
 						state = 0;
 					}
 					else
 					{
-						firstHalfOfSurrogatePair = 0;
+						return false;
 					}
 				}
 				break;
@@ -474,10 +240,7 @@ namespace
 					}
 					else
 					{
-						state = 0;
-						const auto encoded = encoder.encode(hexDigitsOriginal);
-						output += std::string(encoded.begin(), encoded.end());
-						break;
+						return false;
 					}
 					if (++state == 6)
 					{
@@ -506,7 +269,7 @@ namespace
 						}
 						else
 						{
-							firstHalfOfSurrogatePair = 0;
+							return false;
 						}
 					}
 				}
@@ -531,7 +294,7 @@ namespace
 			}
 			break;
 		}
-		return output;
+		return (state != 1) && ((state < 2) || (state > 5));
 	}
 }
 
@@ -553,6 +316,7 @@ namespace JSON
 		 */
 		enum class Type
 		{
+			Invalid,
 			Null,
 			Boolean,
 			String,
@@ -572,7 +336,6 @@ namespace JSON
 			int integerValue;
 			double floatingPointValue;
 		};
-		
 
 		// Properties
 		
@@ -581,7 +344,13 @@ namespace JSON
 		 *     This indicates the type of the value represented
 		 *     by the JSON object.
 		 */
-		Type type = Type::Null;
+		Type type = Type::Invalid;
+
+		/**
+		 * @brief
+		 *     This is a cache of the encoding of the value.
+		 */
+		std::string encoding;
 
 		// Methods
 
@@ -611,6 +380,248 @@ namespace JSON
 		 *     This is the default constructor
 		 */
 		Impl() = default;
+
+		/**
+		 * @brief
+		 *     This parses the given string as an integer value.
+		 *
+		 * @param[in] s
+		 *     This is the string we want to parse to integer.
+		 *
+		 * @return
+		 *     The integer value that is equivalent to given string.
+		 */
+		void parseAsInt(const std::string &s) {
+			size_t index = 0;
+			size_t state = 0;
+			bool negative = false;
+			int value = 0;
+			while (index < s.length())
+			{
+				switch (state)
+				{
+					case 0: // [ minus ]
+						{
+							if (s[index] == '-')
+							{
+								negative = true;
+								++index;
+							}
+							state = 1;
+						}
+						break;
+
+					case 1: // integral part
+						{
+							if (s[index] == 0)
+							{
+								state = 2;
+							}
+							else if (s[index] >= '1' && s[index] <= '9')
+							{
+								state = 3;
+								value += (int)(s[index] - '0');
+							}
+							else
+								return;
+							++index;
+						}
+						break;
+
+					case 2: // Invalid value for number
+						return;
+						break;
+
+					case 3: // *DIGIT (1-9)
+						{
+							const int previousValue = value;
+							if (s[index] >= '1' && s[index] <= '9')
+							{
+								value *= 10;
+								value += (int)(s[index] - '0');
+								if (value / 10 != previousValue)
+								{
+									return;
+								}
+							}
+							else
+							{
+								return;
+							}
+							index++;
+						}
+						break;
+				}
+			}
+			if (state >= 2)
+			{
+				type = Type::Integer;
+				integerValue = (value * (negative ? -1 : 1));
+			}
+		}
+
+		/**
+		 * @brief
+		 *     This parses the given string as a double value.
+		 *
+		 * @param[in] s
+		 *     This is the string we want to parse to float.
+		 *
+		 * @return
+		 *     The double value that is equivalent to given string.
+		 */
+		void parseAsFloat(const std::string &s)
+		{
+			size_t index = 0;
+			size_t state = 0;
+			bool negative = false;
+			bool negativeMagnitude = false;
+			bool negativeExponent = false;
+			double magnitude = 0.0;
+			double fraction = 0.0;
+			double exponent = 0.0;
+			size_t fractionDigits = 0;
+			while (index < s.length())
+			{
+				switch (state)
+				{
+					case 0: // [ minus ]
+						{
+							if (s[index] == '-')
+							{
+								negativeMagnitude = true;
+								++index;
+							}
+							state = 1;
+						}
+						break;
+
+					case 1: // integral part
+						{
+							if (s[index] == 0)
+							{
+								state = 2;
+							}
+							else if (s[index] >= '0' && s[index] <= '9')
+							{
+								state = 3;
+								magnitude += (double)(s[index] - '0');
+							}
+							else
+								return;
+							++index;
+						}
+						break;
+
+					case 2: // Invalid value for number
+						return;
+						break;
+
+					case 3: // *DIGIT (1-9)
+						{
+							if (s[index] >= '0' && s[index] <= '9')
+							{
+								magnitude *= 10.0;
+								magnitude += (double)(s[index] - '0');
+							}
+							else if (s[index] == '.')
+							{
+								state = 4;
+							}
+							else if (s[index] == 'e' || s[index] == 'E')
+							{
+								state = 6;
+							}
+							else
+							{
+								return;
+							}
+							index++;
+						}
+						break;
+					case 4: // Fractional part: consists of one digit (0-9)
+						{
+							if (s[index] >= '0' && s[index] <= '9')
+							{
+								++fractionDigits;
+								fraction += (double)(s[index] - '0') * pow(10.0, -(double)fractionDigits);
+							}
+							else
+							{
+								return;
+							}
+							state = 5;
+							++index;
+						}
+						break;
+					case 5: // Fractional part: consists of optional digits (0-9) or e or E
+						{
+							if (s[index] >= '0' && s[index] <= '9')
+							{
+								++fractionDigits;
+								fraction += (double)(s[index] - '0') * pow(10.0, -(double)fractionDigits);
+							}
+							else if (s[index] == 'e' || s[index] == 'E')
+							{
+								state = 6;
+							}
+							else
+							{
+								return;
+							}
+							++index;
+						}
+						break;
+					case 6: // Exponential part: consists of [plus|minus] 1*DIGIT (0-9)
+						{
+							if (s[index] == '-')
+							{
+								negativeExponent = true;
+								++index;
+							}
+							else if (s[index] == '+')
+								++index;
+							state = 7;
+						}
+						break;
+					case 7: // Exponential part: required DIGIT (0-9)
+						{
+							state = 8;
+						}
+						break;
+					case 8: // Exponential part: Extra DIGITs (0-9)
+						{
+							if (s[index] >= '0' && s[index] <= '9')
+							{
+								exponent *= 10.0;
+								exponent += (double)(s[index] - '0');
+							}
+							else
+							{
+								return;
+							}
+							++index;
+						}
+						break;
+				}
+			}
+			if ((state >= 2) && (state != 4) && (state != 6) && (state != 7))
+			{
+				type = Type::FloatingPoint;
+				floatingPointValue = (
+					(magnitude + fraction) *
+					pow(10.0, (negativeExponent ? -1.0 : 1.0) * exponent) *
+					(negativeMagnitude ? -1.0 : 1.0)
+				);
+			}
+			// else
+				// return JSON::JSON(
+				// 	(magnitude + fraction) *
+				// 	pow(10.0, (negativeExponent ? -1.0 : 1.0) * exponent) *
+				// 	(negativeMagnitude ? -1.0 : 1.0)
+				// );
+		}
+
 	};
 
 	JSON::~JSON() = default;
@@ -623,6 +634,8 @@ namespace JSON
 			return false;
 		else switch (impl_->type)
 		{
+			case Impl::Type::Invalid:
+				return true;
 			case Impl::Type::Null:
 				return true;
 			case Impl::Type::Boolean:
@@ -721,55 +734,95 @@ namespace JSON
 
 	std::string JSON::ToString(const EncodingOptions &options) const
 	{
-		switch (impl_->type)
+		if (impl_->type == Impl::Type::Invalid)
 		{
-			case Impl::Type::Null:
-				return "null";
-			case Impl::Type::Boolean:
-				return impl_->booleanValue ? "true" : "false";
-			case Impl::Type::String:
-				return (
-					"\""
-					+ escape(*impl_->stringValue, options)
-					+ "\""
-				);
-			case Impl::Type::Integer:
-				return StringExtensions::sprintf("%d", impl_->integerValue);
-			case Impl::Type::FloatingPoint:
-				return StringExtensions::sprintf("%lg", impl_->floatingPointValue);
-			default:
-				return "";
+			return StringExtensions::sprintf(
+				"(Invalid JSON: %s)",
+				impl_->encoding.c_str());
 		}
+		if (options.deleteCache)
+		{
+			impl_->encoding.clear();
+		}
+		if (impl_->encoding.empty())
+		{
+			switch (impl_->type)
+			{
+				case Impl::Type::Null:
+					impl_->encoding = "null";
+					break;
+				case Impl::Type::Boolean:
+					impl_->encoding = impl_->booleanValue ? "true" : "false";
+					break;
+				case Impl::Type::String:
+					impl_->encoding = (
+						"\""
+						+ escape(*impl_->stringValue, options)
+						+ "\""
+					);
+					break;
+				case Impl::Type::Integer:
+					impl_->encoding = StringExtensions::sprintf("%d", impl_->integerValue);
+					break;
+				case Impl::Type::FloatingPoint:
+					impl_->encoding = StringExtensions::sprintf("%lg", impl_->floatingPointValue);
+					break;
+				default:
+					impl_->encoding = "????";
+			}
+		}
+		return impl_->encoding;
 	}
 
 	JSON JSON::FromString(const std::string &format)
 	{
-		if (format.empty())
-			return JSON();
-		else if (format[0] == '{')
-			return JSON();
-		else if (format[0] == '[')
-			return JSON();
+		JSON json;
+		json.impl_->encoding = format;
+		if (format.empty() || format[0] == '{' || format[0] == '[')
+		{
+			return json;
+		}
 		else if (format[0] == '"' && format[format.length() - 1] == '"')
-			return unescape(format.substr(1, format.length() - 2));
+		{
+			std::string output;
+			if (unescape(format.substr(1, format.length() - 2), output))
+			{
+				json.impl_->type = Impl::Type::String;
+				json.impl_->stringValue = new std::string(output);
+			}
+		}
 		else if (format == "null")
-			return nullptr;
+		{
+			json.impl_->type = Impl::Type::Null;
+		}
 		else if (format == "true")
-			return true;
+		{
+			json.impl_->type = Impl::Type::Boolean;
+			json.impl_->booleanValue = true;
+		}
 		else if (format == "false")
-			return false;
+		{
+			json.impl_->type = Impl::Type::Boolean;
+			json.impl_->booleanValue = false;
+		}
 		else
 		{
 			if (format.find_first_of(".eE") != std::string::npos)
 			{
-				// TODO: Parse as floating point number
-				return JSON(parseFloat(format));
+				json.impl_->parseAsFloat(format);
 			}
 			else
 			{
-				// TODO: Parse as integer number
-				return JSON(parseInt(format));
+				json.impl_->parseAsInt(format);
 			}
 		}
+		return json;
+	}
+
+	void PrintTo(
+		const JSON &json,
+		std::ostream *os
+	) {
+		*os << json.ToString();
 	}
 } // namespace JSON

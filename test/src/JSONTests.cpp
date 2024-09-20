@@ -133,6 +133,7 @@ TEST(JSONTests, ProperlyEscapeUnicodeCharacters)
 	EXPECT_EQ(testStringEncodedDefault, jsonEncoding);
 	JSON::EncodingOptions options;
 	options.escapeNonAscii = true;
+	options.deleteCache = true;
 	jsonEncoding = json.ToString(options);
 	EXPECT_EQ(testStringEncodedEscapeNonAscii, jsonEncoding);
 	json = JSON::JSON::FromString(testStringEncodedDefault);
@@ -144,9 +145,9 @@ TEST(JSONTests, ProperlyEscapeUnicodeCharacters)
 TEST(JSONTests, BadlyEscapedCharacters)
 {
 	auto json = JSON::JSON::FromString("\"This is bad: \\u123X\"");
-	EXPECT_EQ("This is bad: \\u123X", (std::string)json);
+	EXPECT_EQ(JSON::JSON(), json);
 	json = JSON::JSON::FromString("\"This is bad: \\x\"");
-	EXPECT_EQ("This is bad: \\x", (std::string)json);
+	EXPECT_EQ(JSON::JSON(), json);
 }
 
 TEST(JSONTests, FromInteger)
@@ -233,4 +234,10 @@ TEST(JSONTests, SurrogatePairDecoding)
 
 	encoding = std::string("\"This is a UTF-16 Surrogate pair: \\uD83D\\uDCA9\"");
 	ASSERT_EQ("This is a UTF-16 Surrogate pair: 💩", (std::string)JSON::JSON::FromString(encoding));
+}
+
+TEST(JSONTests, EncodingOfInvalidJson)
+{
+	auto json = JSON::JSON::FromString("\"This is bad: \\u123X\"");
+	ASSERT_EQ("(Invalid JSON: \"This is bad: \\u123X\")", json.ToString());
 }

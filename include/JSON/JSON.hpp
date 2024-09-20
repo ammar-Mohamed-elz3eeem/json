@@ -5,6 +5,8 @@
 #include <string>
 #include <stdint.h>
 #include <StringExtensions/StringExtensions.hpp>
+#include <ostream>
+
 
 /**
  * @file: JSON.hpp
@@ -36,6 +38,14 @@ namespace JSON
 		 *     format.
 		 */
 		bool escapeNonAscii = false;
+
+		/**
+		 * @brief
+		 *     This flag indicates whether or not to disregard
+		 *     any cached encoding when asked to provide an
+		 *     encoding.
+		 */
+		bool deleteCache = false;
 	};
 
 	/**
@@ -242,6 +252,23 @@ namespace JSON
 		 */
 		std::unique_ptr<struct Impl> impl_;
 	};
+
+	/**
+	 * @brief
+	 *     This is a support function for Google tests
+	 *     to print out the actual value of JSON object.
+	 *
+	 * @param[in] json
+	 *     This is the json object we need its value.
+	 *
+	 * @param[in,out] os
+	 *     This points to the stream in which we print the
+	 *     json value.
+	 */
+	void PrintTo(
+		const JSON &json,
+		std::ostream *os);
+
 } // namespace JSON
 
 #endif /* __JSON_HPP__ */
