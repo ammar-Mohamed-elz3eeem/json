@@ -195,6 +195,14 @@ TEST(JSONTests, ToFloatingPoint)
 	ASSERT_TRUE(json == JSON::JSON(5.03e5));
 	json = JSON::JSON::FromString("5.3e-5");
 	ASSERT_TRUE(json == JSON::JSON(5.3e-5));
+	json = JSON::JSON::FromString("5.0e-5");
+	ASSERT_TRUE(json == JSON::JSON(5.0e-5));
+	json = JSON::JSON::FromString("5.0e+5");
+	ASSERT_TRUE(json == JSON::JSON(5.0e+5));
+	json = JSON::JSON::FromString("5.0e5");
+	ASSERT_TRUE(json == JSON::JSON(5.0e5));
+	json = JSON::JSON::FromString("5e5");
+	ASSERT_TRUE(json == JSON::JSON(5e5));
 	json = JSON::JSON::FromString("0.4");
 	ASSERT_TRUE(json == JSON::JSON(0.4));
 	json = JSON::JSON::FromString("-153.625e-5");
