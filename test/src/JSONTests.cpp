@@ -337,3 +337,33 @@ TEST(JSONTests, DecodeArraysWithinArrayWithSpaces)
 	EXPECT_EQ((bool)(*(*json[3])[1]), true);
 	EXPECT_EQ((*json[3])[1]->getType(), JSON::JSON::Type::Boolean);
 }
+
+TEST(JSONTests, DecodeObject)
+{
+	const std::string encoding("{\"value\": 26, \"\": \"Ammar\", \"handles\": [3, 4], \"live\": true}");
+	const auto json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Object);
+	ASSERT_EQ(json.getSize(), 4);
+	ASSERT_TRUE(json.has("value"));
+	ASSERT_TRUE(json.has(""));
+	ASSERT_TRUE(json.has("handles"));
+	ASSERT_TRUE(json.has("live"));
+	ASSERT_FALSE(json.has("nothing"));
+	ASSERT_FALSE(json.has("hobbies"));
+
+	EXPECT_EQ(JSON::JSON::Type::Integer, json["value"]->getType());
+	EXPECT_EQ(JSON::JSON::Type::String, json[""]->getType());
+	EXPECT_EQ(JSON::JSON::Type::Array, json["handles"]->getType());
+	EXPECT_EQ(JSON::JSON::Type::Boolean, json["live"]->getType());
+
+	EXPECT_EQ(26, (int)*json["value"]);
+	EXPECT_EQ("Ammar", (std::string)*json[""]);
+	EXPECT_EQ(true, (bool)*json["live"]);
+
+	EXPECT_EQ(2, json["handles"]->getSize());
+
+	EXPECT_EQ(3, (int)*(*json["handles"])[0]);
+	EXPECT_EQ(JSON::JSON::Type::Integer, (*json["handles"])[0]->getType());
+	EXPECT_EQ(4, (int)*(*json["handles"])[1]);
+	EXPECT_EQ(JSON::JSON::Type::Integer, (*json["handles"])[1]->getType());
+}

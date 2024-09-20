@@ -73,7 +73,8 @@ namespace JSON
 			String,
 			Integer,
 			FloatingPoint,
-			Array
+			Array,
+			Object
 		};
 
 		// Lifecycle Management
@@ -175,6 +176,57 @@ namespace JSON
 
 		/**
 		 * @brief
+		 *     This method returns the element at the given index
+		 *     of the json value, if it's an array.
+		 *
+		 * @param[in] index
+		 *     The index of the element in the json array value.
+		 *
+		 * @return
+		 *     the element at the given index
+		 *
+		 * @retval nullptr
+		 *     This value is returned if there is no element at
+		 *     the given index, or the json value is not array.
+		 */
+		std::shared_ptr<JSON> operator[](int) const;
+
+		/**
+		 * @brief
+		 *     This method returns the element associated with
+		 *     the given key of the json value, if it's an array.
+		 *
+		 * @param[in] index
+		 *     The index of the element in the json array value.
+		 *
+		 * @return
+		 *     the element at the given index
+		 *
+		 * @retval nullptr
+		 *     This value is returned if there is no element at
+		 *     the given index, or the json value is not array.
+		 */
+		std::shared_ptr<JSON> operator[](const std::string &) const;
+
+		/**
+		 * @brief
+		 *     This method returns the element associated with
+		 *     the given key of the json value, if it's an array.
+		 *
+		 * @param[in] index
+		 *     The index of the element in the json array value.
+		 *
+		 * @return
+		 *     the element at the given index
+		 *
+		 * @retval nullptr
+		 *     This value is returned if there is no element at
+		 *     the given index, or the json value is not array.
+		 */
+		std::shared_ptr<JSON> operator[](const char *) const;
+
+		/**
+		 * @brief
 		 *     Construct a new JSON object
 		 */
 		JSON();
@@ -261,6 +313,21 @@ namespace JSON
 		 *     or it is an empty array. 
 		 */
 		size_t getSize() const;
+
+		/**
+		 * @brief
+		 *     This method returns an indication of whether or not
+		 *     the JSON value is an object with an inner value
+		 *     having the given key for a name.
+		 *
+		 * @param[in] s
+		 *     This is the name of the inner value to check.
+		 *
+		 * @return 
+		 *     true if the given key exists in the JSON object value,
+		 *     false otherwise. 
+		 */
+		bool has(const std::string &s) const;
 
 		/**
 		 * @brief
