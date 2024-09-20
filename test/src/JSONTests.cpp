@@ -214,3 +214,23 @@ TEST(JSONTests, ToFloatingPoint)
 	json = JSON::JSON::FromString("-153.625E1");
 	ASSERT_TRUE(json == JSON::JSON(-153.625E1));
 }
+
+TEST(JSONTests, SurrogatePairEncoding)
+{
+	JSON::EncodingOptions opt;
+	opt.escapeNonAscii = true;
+	JSON::JSON json(std::string("This is a UTF-16 Surrogate pair: 𣎴"));
+	ASSERT_EQ("\"This is a UTF-16 Surrogate pair: \\uD84C\\uDFB4\"", json.ToString(opt));
+
+	json = JSON::JSON(std::string("This is a UTF-16 Surrogate pair: 💩"));
+	ASSERT_EQ("\"This is a UTF-16 Surrogate pair: \\uD83D\\uDCA9\"", json.ToString(opt));
+}
+
+TEST(JSONTests, SurrogatePairDecoding)
+{
+	std::string encoding("\"This is a UTF-16 Surrogate pair: \\uD84C\\uDFB4\"");
+	ASSERT_EQ("This is a UTF-16 Surrogate pair: 𣎴", (std::string)JSON::JSON::FromString(encoding));
+
+	encoding = std::string("\"This is a UTF-16 Surrogate pair: \\uD83D\\uDCA9\"");
+	ASSERT_EQ("This is a UTF-16 Surrogate pair: 💩", (std::string)JSON::JSON::FromString(encoding));
+}

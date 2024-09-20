@@ -354,8 +354,18 @@ namespace
 				options.escapeNonAscii &&
 				(codepoint > 0x7F)
 			) {
-				output += "\\u";
-				output += codepointToFourHexDigits(codepoint);
+				if (codepoint > 0xFFFF)
+				{
+					output += "\\u";
+					output += codepointToFourHexDigits(0xD800 + (((codepoint - 0x10000) >> 10) & 0x3FF));
+					output += "\\u";
+					output += codepointToFourHexDigits(0xDC00 + ((codepoint - 0x10000) & 0x3FF));
+				}
+				else
+				{
+					output += "\\u";
+					output += codepointToFourHexDigits(codepoint);
+				}
 			}
 			else
 			{
@@ -384,6 +394,7 @@ namespace
 		std::string output;
 		size_t state = 0;
 		Utf8::UnicodeCodePoint cpFromHexDigit = 0;
+		Utf8::UnicodeCodePoint firstHalfOfSurrogatePair = 0;
 		std::vector<Utf8::UnicodeCodePoint> hexDigitsOriginal;
 		for (const auto codepoint: decoder.decode(s))
 		{
@@ -395,10 +406,14 @@ namespace
 					{
 						state = 1;
 					}
-					else
+					else if (firstHalfOfSurrogatePair == 0)
 					{
 						const auto encoded = encoder.encode({ codepoint });
 						output += std::string(encoded.begin(), encoded.end());
+					}
+					else
+					{
+						firstHalfOfSurrogatePair = 0;
 					}
 				}
 				break;
@@ -411,7 +426,7 @@ namespace
 						cpFromHexDigit = 0;
 						hexDigitsOriginal = {0x5C, 0x75};
 					}
-					else
+					else if (firstHalfOfSurrogatePair == 0)
 					{
 						Utf8::UnicodeCodePoint alternative = codepoint;
 						const auto entry = SPECIAL_ESCAPE_DECODINGS.find(codepoint);
@@ -426,6 +441,10 @@ namespace
 							output += std::string(encoded.begin(), encoded.end());
 						}
 						state = 0;
+					}
+					else
+					{
+						firstHalfOfSurrogatePair = 0;
 					}
 				}
 				break;
@@ -463,8 +482,32 @@ namespace
 					if (++state == 6)
 					{
 						state = 0;
-						const auto encoded = encoder.encode({ cpFromHexDigit });
-						output += std::string(encoded.begin(), encoded.end());
+						if (cpFromHexDigit >= 0xD800 && cpFromHexDigit <= 0xDFFF)
+						{
+							if (firstHalfOfSurrogatePair == 0)
+							{
+								firstHalfOfSurrogatePair = cpFromHexDigit;
+							}
+							else
+							{
+								const auto secondHalfOfSurrogatePair = cpFromHexDigit;
+								const auto encoded = encoder.encode({
+									((firstHalfOfSurrogatePair - 0xD800) << 10) +
+									(secondHalfOfSurrogatePair - 0xDC00) + 0x10000
+								});
+								output += std::string(encoded.begin(), encoded.end());
+								firstHalfOfSurrogatePair = 0;
+							}
+						}
+						else if (firstHalfOfSurrogatePair == 0)
+						{
+							const auto encoded = encoder.encode({ cpFromHexDigit });
+							output += std::string(encoded.begin(), encoded.end());
+						}
+						else
+						{
+							firstHalfOfSurrogatePair = 0;
+						}
 					}
 				}
 				break;
