@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <Utf8/Utf8.hpp>
 #include <map>
+#include <set>
 #include <vector>
 #include <math.h>
 #include <stack>
@@ -104,6 +105,19 @@ namespace JSON
 		 * @return true if both JSON objects are equal.
 		 */
 		bool operator==(const JSON &other) const;
+
+		/**
+		 * @brief
+		 *     This is the inequality comparison operator.
+		 * 
+		 * @param[in] other
+		 *     This is the other object we want to compare
+		 *     with this object.
+		 * 
+		 * @return true if both JSON objects are not equal.
+		 */
+		bool operator!=(const JSON &other) const;
+
 
 		/**
 		 * @brief

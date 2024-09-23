@@ -440,3 +440,31 @@ TEST(JSONTests, ToObject)
 	json.remove("answer");
 	ASSERT_EQ("{\"hello\":\"world\",\"hobbies\":null,\"isNull\":true}", json.ToString());
 }
+
+TEST(JSONTests, ObjectsEquality)
+{
+	const auto json1 = JSON::JSON::FromString("{\"answer\": \"yes\", \"void\": \"no\"}");
+	const auto json2 = JSON::JSON::FromString("{\r\n\t\"answer\": \"yes\",\r\n\t\"void\": \"no\"\r\n}");
+	const auto json3 = JSON::JSON::FromString("{\"answer\": \"yes\", \"void\": \"yes\"}");
+	const auto json4 = JSON::JSON::FromString("{\"answer\": \"yes\"}");
+	ASSERT_EQ(json1, json2);
+	ASSERT_NE(json2, json3);
+	ASSERT_NE(json1, json3);
+	ASSERT_NE(json1, json4);
+	ASSERT_NE(json2, json4);
+	ASSERT_NE(json3, json4);
+}
+
+TEST(JSONTests, ArraysEquality)
+{
+	const auto json1 = JSON::JSON::FromString("[1,2,3]");
+	const auto json2 = JSON::JSON::FromString("[\r\n\t1,\r\n\t2,\r\n\t3\r\n]");
+	const auto json3 = JSON::JSON::FromString("[1,2,5]");
+	const auto json4 = JSON::JSON::FromString("[1,2,3,4]");
+	ASSERT_EQ(json1, json2);
+	ASSERT_NE(json2, json3);
+	ASSERT_NE(json1, json3);
+	ASSERT_NE(json1, json4);
+	ASSERT_NE(json2, json4);
+	ASSERT_NE(json3, json4);
+}

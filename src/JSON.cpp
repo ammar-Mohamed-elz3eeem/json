@@ -764,10 +764,44 @@ namespace JSON
 				return impl_->integerValue == other.impl_->integerValue;
 			case Type::FloatingPoint:
 				return impl_->floatingPointValue == other.impl_->floatingPointValue;
+			case Type::Array:
+				{
+					if (impl_->arrayValues->size() != other.impl_->arrayValues->size())
+						return false;
+					for (size_t i = 0; i < impl_->arrayValues->size(); ++i)
+						if (*(*impl_->arrayValues)[i] != *(*other.impl_->arrayValues)[i])
+							return false;
+				}
+				return true;
+			case Type::Object:
+				{
+					std::set<std::string> keys;
+					for (const auto &entry: *impl_->objectValues)
+						(void)keys.insert(entry.first);
+					for (const auto &entry: *other.impl_->objectValues)
+					{
+						const auto otherEntry = keys.find(entry.first);
+						if (otherEntry == keys.end())
+							return false;
+						(void)keys.erase(entry.first);
+					}
+					if (!keys.empty())
+						return false;
+					for (const auto &entry: *impl_->objectValues)
+						if (*(*impl_->objectValues)[entry.first] != *(*other.impl_->objectValues)[entry.first])
+							return false;
+				}
+				return true;
 			default:
 				return false;
 		}
 	}
+
+	bool JSON::operator!=(const JSON &other) const
+	{
+		return !(*this == other);
+	}
+
 
 	JSON::operator bool() const
 	{
