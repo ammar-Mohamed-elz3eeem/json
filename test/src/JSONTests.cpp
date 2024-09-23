@@ -468,3 +468,12 @@ TEST(JSONTests, ArraysEquality)
 	ASSERT_NE(json2, json4);
 	ASSERT_NE(json3, json4);
 }
+
+TEST(JSONTests, AddArrayToItself)
+{
+	JSON::JSON json(JSON::JSON::Type::Array);
+	json.add(26);
+	json.add(50);
+	json.add(json);
+	ASSERT_EQ("[26,50,[26,50]]", json.ToString());
+}

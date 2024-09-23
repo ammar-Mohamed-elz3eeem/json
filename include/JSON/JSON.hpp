@@ -87,9 +87,9 @@ namespace JSON
 		// Lifecycle Management
 
 		~JSON() noexcept;
-		JSON(const JSON &) noexcept = delete;
+		JSON(const JSON &) noexcept;
 		JSON(JSON &&) noexcept;
-		JSON &operator=(const JSON &) noexcept = delete;
+		JSON &operator=(const JSON &) noexcept;
 		JSON &operator=(JSON &&) noexcept;
 
 		// Public Methods
@@ -117,7 +117,6 @@ namespace JSON
 		 * @return true if both JSON objects are not equal.
 		 */
 		bool operator!=(const JSON &other) const;
-
 
 		/**
 		 * @brief
@@ -395,7 +394,7 @@ namespace JSON
 		 * @param[in] value
 		 *     This is the value to be moved to the end of array.
 		 */
-		void add(JSON &&value);
+		void add(const JSON& value);
 
 		/**
 		 * @brief
@@ -412,7 +411,7 @@ namespace JSON
 		 *     This is the position which we want to put the value
 		 *     at in the array.
 		 */
-		void insert(JSON &&value, size_t index);
+		void insert(const JSON& value, size_t index);
 
 		/**
 		 * @brief
@@ -437,7 +436,7 @@ namespace JSON
 		 * @param[in] value
 		 *     The json value associated with the given key.
 		 */
-		void set(const std::string &key, JSON &&value);
+		void set(const std::string &key, const JSON& value);
 
 		/**
 		 * @brief

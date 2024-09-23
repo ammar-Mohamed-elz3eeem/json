@@ -368,6 +368,71 @@ namespace JSON
 
 		/**
 		 * @brief
+		 *     This method build the json value up as a copy
+		 *     of another json value 
+		 * 
+		 * @param[in] otherElement
+		 *     This is the other json value to copy
+		 */
+		void copyFrom(const std::unique_ptr<Impl>& otherElement)
+		{
+			type = otherElement->type;
+			switch (type)
+			{
+			case Type::Boolean:
+				{
+					booleanValue = otherElement->booleanValue;
+				}
+				break;
+
+			case Type::Integer:
+				{
+					integerValue = otherElement->integerValue;
+				}
+				break;
+
+			case Type::FloatingPoint:
+				{
+					floatingPointValue = otherElement->floatingPointValue;
+				}
+				break;
+
+			case Type::String:
+				{
+					stringValue = new std::string(*otherElement->stringValue);
+				}
+				break;
+
+			case Type::Array:
+				{
+					arrayValues = new std::vector<std::shared_ptr<JSON>>;
+					arrayValues->reserve(otherElement->arrayValues->size());
+					for (const auto &val: *otherElement->arrayValues)
+					{
+						const auto copy = std::make_shared<JSON>(*val);
+						arrayValues->push_back(copy);
+					}
+				}
+				break;
+
+			case Type::Object:
+				{
+					objectValues = new std::map<std::string, std::shared_ptr<JSON>>;
+					for (const auto &val: *otherElement->objectValues)
+					{
+						const auto copy = std::make_shared<JSON>(*val.second);
+						(*objectValues)[val.first] = copy;
+					}
+				}
+				break;
+			
+			default:
+				break;
+			}
+		}
+
+		/**
+		 * @brief
 		 *     This parses the given string as an integer JSON value.
 		 *
 		 * @param[in] s
@@ -743,8 +808,29 @@ namespace JSON
 	};
 
 	JSON::~JSON() = default;
+	
+	JSON::JSON(const JSON &other) noexcept
+		: impl_(new Impl())
+	{
+		if (this != &other)
+		{
+			impl_->copyFrom(other.impl_);
+		}
+	}
+	
 	JSON::JSON(JSON &&) noexcept = default;
+	
 	JSON& JSON::operator=(JSON &&) noexcept = default;
+	
+	JSON &JSON::operator=(const JSON &other) noexcept
+	{
+		if (this != &other)
+		{
+			impl_.reset(new Impl());
+			impl_->copyFrom(other.impl_);
+		}
+		return *this;
+	}
 
 	bool JSON::operator==(const JSON &other) const
 	{
@@ -801,7 +887,6 @@ namespace JSON
 	{
 		return !(*this == other);
 	}
-
 
 	JSON::operator bool() const
 	{
@@ -1096,7 +1181,7 @@ namespace JSON
 		return json;
 	}
 
-	void JSON::add(JSON &&value)
+	void JSON::add(const JSON &value)
 	{
 		if (impl_->type != Type::Array)
 			return;
@@ -1104,7 +1189,7 @@ namespace JSON
 		impl_->encoding.clear();
 	}
 
-	void JSON::insert(JSON &&value, size_t index)
+	void JSON::insert(const JSON &value, size_t index)
 	{
 		if (impl_->type != Type::Array)
 			return;
@@ -1139,7 +1224,7 @@ namespace JSON
 		impl_->encoding.clear();
 	}
 
-	void JSON::set(const std::string &key, JSON &&value)
+	void JSON::set(const std::string &key, const JSON &value)
 	{
 		if (impl_->type != Type::Object)
 			return;
