@@ -403,3 +403,15 @@ TEST(JSONTests, DecodeJsonArrayWithNestedObjectsAndArrays)
 	ASSERT_EQ(json[1]->getSize(), 4);
 }
 
+TEST(JSONTests, NumericIndexNotArray)
+{
+	const JSON::JSON json(50);
+	ASSERT_TRUE(json[0] == nullptr);
+}
+
+TEST(JSONTests, KeyIndexNotObject)
+{
+	const JSON::JSON json(50);
+	ASSERT_TRUE(json["name"] == nullptr);
+}
+
