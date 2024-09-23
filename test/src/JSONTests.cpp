@@ -477,3 +477,18 @@ TEST(JSONTests, AddArrayToItself)
 	json.add(json);
 	ASSERT_EQ("[26,50,[26,50]]", json.ToString());
 }
+
+TEST(JSONTests, ReassignValuesToTestCopyConstructor)
+{
+	JSON::JSON json1(26);
+	JSON::JSON json2(JSON::JSON::Type::Array);
+	json2.add(json1);
+	json2.add("test text");
+	json2.add("test");
+	json1 = json2;
+	json1.add(false);
+	json2.remove(2);
+	json2.add(true);
+	ASSERT_EQ("[26,\"test text\",\"test\",false]", json1.ToString());
+	ASSERT_EQ("[26,\"test text\",true]", json2.ToString());
+}
