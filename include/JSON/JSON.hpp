@@ -373,6 +373,43 @@ namespace JSON
 		 */
 		static JSON FromString(const std::string &);
 
+		/**
+		 * @brief
+		 *     This method moves the given value to be at the end
+		 *     of the json, if only the json value is array.
+		 * 
+		 * @param[in] value
+		 *     This is the value to be moved to the end of array.
+		 */
+		void add(JSON &&value);
+
+		/**
+		 * @brief
+		 *     This method move the given value to the given
+		 *     index of the json, if only the json value is array.
+		 *     Any value that exist after this index will be moved
+		 *     forward one position.
+		 * 
+		 * @param[in] value
+		 *     This is the value to be moved into the given index
+		 *     of array.
+		 * 
+		 * @param[in] index
+		 *     This is the position which we want to put the value
+		 *     at in the array.
+		 */
+		void insert(JSON &&value, size_t index);
+
+		/**
+		 * @brief
+		 *     This method removes the value at the given index of
+		 *     the array, if only the json value is an array.
+		 * 
+		 * @param[in] index
+		 *     the position of the item we want to remove from array.
+		 */
+		void remove(size_t index);
+
 	private:
 		// Private Properties
 

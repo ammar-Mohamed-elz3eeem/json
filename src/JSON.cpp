@@ -938,23 +938,48 @@ namespace JSON
 			switch (impl_->type)
 			{
 				case Type::Null:
-					impl_->encoding = "null";
+					{
+						impl_->encoding = "null";
+					}
 					break;
 				case Type::Boolean:
-					impl_->encoding = impl_->booleanValue ? "true" : "false";
+					{
+						impl_->encoding = impl_->booleanValue ? "true" : "false";
+					}
 					break;
 				case Type::String:
-					impl_->encoding = (
-						"\""
-						+ escape(*impl_->stringValue, options)
-						+ "\""
-					);
+					{
+						impl_->encoding = (
+							"\""
+							+ escape(*impl_->stringValue, options)
+							+ "\""
+						);
+					}
 					break;
 				case Type::Integer:
-					impl_->encoding = StringExtensions::sprintf("%d", impl_->integerValue);
+					{
+						impl_->encoding = StringExtensions::sprintf("%d", impl_->integerValue);
+					}
 					break;
 				case Type::FloatingPoint:
-					impl_->encoding = StringExtensions::sprintf("%lg", impl_->floatingPointValue);
+					{
+						impl_->encoding = StringExtensions::sprintf("%lg", impl_->floatingPointValue);
+					}
+					break;
+				case Type::Array:
+					{
+						impl_->encoding = '[';
+						bool isFirst = true;
+						for (const auto value: *impl_->arrayValues)
+						{
+							if (isFirst)
+								isFirst = false;
+							else
+								impl_->encoding += ',';
+							impl_->encoding += value->ToString(options);
+						}
+						impl_->encoding += ']';
+					}
 					break;
 				default:
 					impl_->encoding = "????";
@@ -1018,6 +1043,41 @@ namespace JSON
 			}
 		}
 		return json;
+	}
+
+	void JSON::add(JSON &&value)
+	{
+		if (impl_->type != Type::Array)
+			return;
+		insert(std::move(value), impl_->arrayValues->size());
+		impl_->encoding.clear();
+	}
+
+	void JSON::insert(JSON &&value, size_t index)
+	{
+		if (impl_->type != Type::Array)
+			return;
+		(void)impl_->arrayValues->insert(
+			impl_->arrayValues->begin() + std::min(
+				index,
+				impl_->arrayValues->size()
+			),
+			std::make_shared<JSON>(std::move(value))
+		);
+		impl_->encoding.clear();
+	}
+
+	void JSON::remove(size_t index)
+	{
+		if (impl_->type != Type::Array)
+			return;
+		if (index < impl_->arrayValues->size())
+		{
+			impl_->arrayValues->erase(
+				impl_->arrayValues->begin() + index
+			);
+			impl_->encoding.clear();
+		}
 	}
 
 	void PrintTo(

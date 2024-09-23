@@ -367,6 +367,7 @@ TEST(JSONTests, DecodeObject)
 	EXPECT_EQ(4, (int)*(*json["handles"])[1]);
 	EXPECT_EQ(JSON::JSON::Type::Integer, (*json["handles"])[1]->getType());
 }
+
 TEST(JSONTests, DecodeUnterminatedInnerArray)
 {
 	const std::string encoding("{ \"value\": 1, \"array\": [42, 75, \"flag\": true }");
@@ -415,3 +416,19 @@ TEST(JSONTests, KeyIndexNotObject)
 	ASSERT_TRUE(json["name"] == nullptr);
 }
 
+TEST(JSONTests, ToArray)
+{
+	JSON::JSON json(JSON::JSON::Type::Array);
+	json.add(42);
+	json.insert("Hello", 0);
+	json.add(3);
+	json.insert("World", 1);
+	ASSERT_EQ("[\"Hello\",\"World\",42,3]", json.ToString());
+	json.remove(1);
+	ASSERT_EQ("[\"Hello\",42,3]", json.ToString());
+}
+
+TEST(JSONTests, ToObject)
+{
+
+}
