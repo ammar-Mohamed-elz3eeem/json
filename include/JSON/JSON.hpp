@@ -374,6 +374,22 @@ namespace JSON
 		 * @brief
 		 *     This method returns a new JSON object constructed
 		 *     by parsing the JSON object from the given format
+		 *     codepoints.
+		 * 
+		 * @param[in] formatBeforeTrim
+		 *     This is the codepoints format of the JSON object to
+		 *     construct, it may contain whitespace characters.
+		 * 
+		 * @return
+		 *     new JSON object constructed by parsing the JSON
+		 *     object from the given format codepoints.
+		 */
+		static JSON FromString(const std::vector<Utf8::UnicodeCodePoint> &);
+
+		/**
+		 * @brief
+		 *     This method returns a new JSON object constructed
+		 *     by parsing the JSON object from the given format
 		 *     string.
 		 * 
 		 * @param[in] formatBeforeTrim
