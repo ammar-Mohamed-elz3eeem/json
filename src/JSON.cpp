@@ -509,6 +509,75 @@ namespace
 		}
 		return (state != 1) && ((state < 2) || (state > 5));
 	}
+
+	/**
+	 * @brief
+	 *     compare two arrays holding pointers for JSON values
+	 *     if they are equal or not
+	 * 
+	 * @param[in] lhs
+	 *     This the left array containing json values
+	 * 
+	 * @param[in] rhs
+	 *     This the right array containing json values
+	 * 
+	 * @return
+	 *     true if both arrays have the same size and all
+	 *     elements on both of them are also equal (deep equal)
+	 *     otherwise false.
+	 */
+	bool compareArrays(
+		const std::vector<std::shared_ptr<JSON::JSON>> &lhs,
+		const std::vector<std::shared_ptr<JSON::JSON>> &rhs
+	) {
+		if (lhs.size() != rhs.size())
+			return false;
+		for (size_t i = 0; i < lhs.size(); ++i)
+			if (*lhs[i] != *rhs[i])
+				return false;
+		return true;
+	}
+
+	/**
+	 * @brief
+	 *     compare two objects holding pointers for JSON values
+	 *     if they are equal or not
+	 * 
+	 * @param[in] lhs
+	 *     This the left object containing json values
+	 * 
+	 * @param[in] rhs
+	 *     This the right object containing json values
+	 * 
+	 * @return
+	 *     true if both objects have the same size and all
+	 *     elements on both of them are also equal (deep equal)
+	 *     otherwise false.
+	 */
+	bool compareObjects(
+		const std::map<std::string, std::shared_ptr<JSON::JSON>> &lhs,
+		const std::map<std::string, std::shared_ptr<JSON::JSON>> &rhs
+	) {
+		std::set<std::string> keys;
+		for (const auto &entry: lhs)
+			(void)keys.insert(entry.first);
+		for (const auto &entry: rhs)
+		{
+			const auto otherEntry = keys.find(entry.first);
+			if (otherEntry == keys.end())
+				return false;
+			(void)keys.erase(entry.first);
+		}
+		if (!keys.empty())
+			return false;
+		for (auto it = lhs.begin(); it != lhs.end(); it++)
+		{
+			const auto otherEntry = rhs.find(it->first);
+			if (*it->second != *otherEntry->second)
+				return false;
+		}
+		return true;
+	}
 }
 
 namespace JSON
@@ -792,8 +861,11 @@ namespace JSON
 						{
 							if (codepoints[index] >= 0x30 && codepoints[index] <= 0x39)
 							{
+								const auto previousMagnitude = (intmax_t)magnitude;
 								magnitude *= 10.0;
 								magnitude += (double)(codepoints[index] - '0');
+								if (previousMagnitude != (intmax_t)magnitude / 10)
+									return;
 							}
 							else if (codepoints[index] == 0x2E)
 							{
@@ -864,8 +936,11 @@ namespace JSON
 						{
 							if (codepoints[index] >= 0x30 && codepoints[index] <= 0x39)
 							{
+								const auto previousExponent = (intmax_t)exponent;
 								exponent *= 10.0;
 								exponent += (double)(codepoints[index] - 0x30);
+								if (previousExponent != (intmax_t)exponent / 10)
+									return;
 							}
 							else
 							{
@@ -1008,7 +1083,7 @@ namespace JSON
 	};
 
 	JSON::~JSON() = default;
-	
+
 	JSON::JSON(const JSON &other) noexcept
 		: impl_(new Impl())
 	{
@@ -1051,33 +1126,9 @@ namespace JSON
 			case Type::FloatingPoint:
 				return impl_->floatingPointValue == other.impl_->floatingPointValue;
 			case Type::Array:
-				{
-					if (impl_->arrayValues->size() != other.impl_->arrayValues->size())
-						return false;
-					for (size_t i = 0; i < impl_->arrayValues->size(); ++i)
-						if (*(*impl_->arrayValues)[i] != *(*other.impl_->arrayValues)[i])
-							return false;
-				}
-				return true;
+				return compareArrays(*impl_->arrayValues, *other.impl_->arrayValues);
 			case Type::Object:
-				{
-					std::set<std::string> keys;
-					for (const auto &entry: *impl_->objectValues)
-						(void)keys.insert(entry.first);
-					for (const auto &entry: *other.impl_->objectValues)
-					{
-						const auto otherEntry = keys.find(entry.first);
-						if (otherEntry == keys.end())
-							return false;
-						(void)keys.erase(entry.first);
-					}
-					if (!keys.empty())
-						return false;
-					for (const auto &entry: *impl_->objectValues)
-						if (*(*impl_->objectValues)[entry.first] != *(*other.impl_->objectValues)[entry.first])
-							return false;
-				}
-				return true;
+				return compareObjects(*impl_->objectValues, *other.impl_->objectValues);
 			default:
 				return false;
 		}
