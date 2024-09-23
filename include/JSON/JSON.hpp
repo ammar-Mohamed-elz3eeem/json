@@ -410,6 +410,31 @@ namespace JSON
 		 */
 		void remove(size_t index);
 
+		/**
+		 * @brief
+		 *     This method adds new key, value pair to our json
+		 *     object with the key specified by the given key
+		 *     and the value associated with it will be the given
+		 *     json value.
+		 * 
+		 * @param[in] key
+		 *     The key that is added to the object.
+		 * 
+		 * @param[in] value
+		 *     The json value associated with the given key.
+		 */
+		void set(const std::string &key, JSON &&value);
+
+		/**
+		 * @brief
+		 *     This method removes the given key with its associated
+		 *     value from the given json object.
+		 *
+		 * @param[in] key
+		 *     The key to be removed from the json object.
+		 */
+		void remove(const std::string &key);
+
 	private:
 		// Private Properties
 

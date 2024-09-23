@@ -981,6 +981,23 @@ namespace JSON
 						impl_->encoding += ']';
 					}
 					break;
+				case Type::Object:
+					{
+						impl_->encoding = '{';
+						bool isFirst = true;
+						for (const auto& entry: *impl_->objectValues)
+						{
+							if (isFirst)
+								isFirst = false;
+							else
+								impl_->encoding += ',';
+							const JSON jsonKey(entry.first);
+							impl_->encoding +=  jsonKey.ToString(options) + ":";
+							impl_->encoding += entry.second->ToString(options);
+						}
+						impl_->encoding += '}';
+					}
+					break;
 				default:
 					impl_->encoding = "????";
 			}
@@ -1078,6 +1095,22 @@ namespace JSON
 			);
 			impl_->encoding.clear();
 		}
+	}
+
+	void JSON::remove(const std::string &key)
+	{
+		if (impl_->type != Type::Object)
+			return;
+		(void)impl_->objectValues->erase(key);
+		impl_->encoding.clear();
+	}
+
+	void JSON::set(const std::string &key, JSON &&value)
+	{
+		if (impl_->type != Type::Object)
+			return;
+		(*impl_->objectValues)[key] = std::make_shared<JSON>(std::move(value));
+		impl_->encoding.clear();
 	}
 
 	void PrintTo(

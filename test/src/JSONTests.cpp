@@ -430,5 +430,13 @@ TEST(JSONTests, ToArray)
 
 TEST(JSONTests, ToObject)
 {
-
+	JSON::JSON json(JSON::JSON::Type::Object);
+	json.set("answer", 26);
+	json.set("hello", 0);
+	json.set("hello", "world");
+	json.set("isNull", true);
+	json.set("hobbies", nullptr);
+	ASSERT_EQ("{\"answer\":26,\"hello\":\"world\",\"hobbies\":null,\"isNull\":true}", json.ToString());
+	json.remove("answer");
+	ASSERT_EQ("{\"hello\":\"world\",\"hobbies\":null,\"isNull\":true}", json.ToString());
 }
