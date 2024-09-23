@@ -351,6 +351,18 @@ namespace JSON
 				}
 				break;
 
+				case Type::Array:
+				{
+					delete arrayValues;
+				}
+				break;
+
+				case Type::Object:
+				{
+					delete objectValues;
+				}
+				break;
+
 				default:
 					break;
 			}
