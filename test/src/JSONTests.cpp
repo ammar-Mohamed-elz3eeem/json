@@ -367,3 +367,39 @@ TEST(JSONTests, DecodeObject)
 	EXPECT_EQ(4, (int)*(*json["handles"])[1]);
 	EXPECT_EQ(JSON::JSON::Type::Integer, (*json["handles"])[1]->getType());
 }
+TEST(JSONTests, DecodeUnterminatedInnerArray)
+{
+	const std::string encoding("{ \"value\": 1, \"array\": [42, 75, \"flag\": true }");
+	const auto json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Invalid);
+}
+
+TEST(JSONTests, DecodeJsonArrayWithNestedObjectsAndArrays)
+{
+	const std::string encoding(
+		"[\r\n"
+		"\t{\r\n"
+		"\t\t\"name\": \"Ammar\",\r\n"
+		"\t\t\"hobbies\": [\"Swimming\", \"Programming\", \"Reading\"],\r\n"
+		"\t\t\"age\": 25,\r\n"
+		"\t\t\"smoking\": true\r\n"
+		"\t},\r\n"
+		"\t{\r\n"
+		"\t\t\"name\": \"Abd-allah\",\r\n"
+		"\t\t\"hobbies\": [\"Programming\", \"Writing\"],\r\n"
+		"\t\t\"age\": 25,\r\n"
+		"\t\t\"smoking\": true\r\n"
+		"\t}\r\n"
+		"]\r\n"
+	);
+	JSON::JSON json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Array);
+	ASSERT_EQ(json.getSize(), 2);
+
+	ASSERT_EQ(json[0]->getType(), JSON::JSON::Type::Object);
+	ASSERT_EQ(json[0]->getSize(), 4);
+
+	ASSERT_EQ(json[1]->getType(), JSON::JSON::Type::Object);
+	ASSERT_EQ(json[1]->getSize(), 4);
+}
+
