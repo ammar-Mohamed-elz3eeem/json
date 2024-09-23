@@ -663,6 +663,10 @@ namespace JSON
 					{
 						expectedDelims.push(']');
 					}
+					else if (codepoint == (Utf8::UnicodeCodePoint)'{')
+					{
+						expectedDelims.push('}');
+					}
 					else if (
 						codepoint == (Utf8::UnicodeCodePoint)delimeter &&
 						expectedDelims.empty()
