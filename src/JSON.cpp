@@ -11,11 +11,6 @@
  */
 
 #include <JSON/JSON.hpp>
-#include <Utf8/Utf8.hpp>
-#include <map>
-#include <vector>
-#include <math.h>
-#include <stack>
 
 namespace
 {
@@ -841,9 +836,28 @@ namespace JSON
 		return (*this)[(std::string)s];
 	}
 
-	JSON::JSON()
+	JSON::JSON(Type type)
 		: impl_(new Impl())
-	{}
+	{
+		impl_->type = type;
+		switch (type)
+		{
+			case Type::String:
+				impl_->stringValue = new std::string();
+				break;
+
+			case Type::Array:
+				impl_->arrayValues = new std::vector<std::shared_ptr<JSON>>();
+				break;
+
+			case Type::Object:
+				impl_->objectValues = new std::map<std::string, std::shared_ptr<JSON>>();
+				break;
+
+			default:
+				break;
+		}
+	}
 
 	JSON::JSON(nullptr_t)
 		: impl_(new Impl())
@@ -900,11 +914,10 @@ namespace JSON
 		return 0;
 	}
 
-	bool JSON::has(const std::string &s) const
+	bool JSON::has(const std::string &key) const
 	{
-		printf("StringKey is: %s\n", s.c_str());
 		if (impl_->type == Type::Object)
-			return impl_->objectValues->find(s) != impl_->objectValues->end();
+			return impl_->objectValues->find(key) != impl_->objectValues->end();
 		return false;
 	}
 

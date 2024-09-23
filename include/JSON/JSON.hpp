@@ -6,6 +6,12 @@
 #include <stdint.h>
 #include <StringExtensions/StringExtensions.hpp>
 #include <ostream>
+#include <algorithm>
+#include <Utf8/Utf8.hpp>
+#include <map>
+#include <vector>
+#include <math.h>
+#include <stack>
 
 
 /**
@@ -227,9 +233,16 @@ namespace JSON
 
 		/**
 		 * @brief
-		 *     Construct a new JSON object
+		 *     Construct a new JSON object with the given type.
+		 * 
+		 * @param[in] type
+		 *     the new type we want for our json value.
+		 * 
+		 * @note
+		 *     Setting the type is only useful for invalid, null
+		 *     and mutable data (like array or object) types.
 		 */
-		JSON();
+		JSON(Type type = Type::Invalid);
 
 		/**
 		 * @brief
@@ -320,14 +333,14 @@ namespace JSON
 		 *     the JSON value is an object with an inner value
 		 *     having the given key for a name.
 		 *
-		 * @param[in] s
+		 * @param[in] key
 		 *     This is the name of the inner value to check.
 		 *
 		 * @return 
 		 *     true if the given key exists in the JSON object value,
 		 *     false otherwise. 
 		 */
-		bool has(const std::string &s) const;
+		bool has(const std::string &) const;
 
 		/**
 		 * @brief
