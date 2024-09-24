@@ -53,6 +53,39 @@ namespace JSON
 		 *     encoding.
 		 */
 		bool deleteCache = false;
+
+		/**
+		 * @brief
+		 *     This flag indicates whether or not to add whitespace
+		 *     to line up & indent nested structures when encoding
+		 *     json values.
+		 */
+		bool prettyPrint = false;
+
+		/**
+		 * @brief
+		 *     If prettyPrint is enabled and the json value is
+		 *     array or object so every element on that array
+		 *     or object will be wrapped to a new lien, with the
+		 *     number defined here as space count before that item
+		 *     to act as indentation for that element.
+		 */
+		size_t spacePerIndentation = 4;
+
+		/**
+		 * @brief
+		 *     If prettyPrint is enabled, this is the maximum
+		 *     length to allow for any one line before breaking
+		 *     up a line between elements of the array or object. 
+		 */
+		size_t wrapThreshold = 60;
+
+		/**
+		 * @brief
+		 *     This is the depth of element until which we format
+		 *     the json value to be pretty printed.
+		 */
+		size_t depth = 0;
 	};
 
 	/**

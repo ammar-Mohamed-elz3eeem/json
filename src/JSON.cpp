@@ -1340,32 +1340,82 @@ namespace JSON
 					{
 						impl_->encoding = '[';
 						bool isFirst = true;
+						auto nestedOptions = options;
+						nestedOptions.depth++;
+						std::string nestedIndentation(
+							(
+								nestedOptions.depth *
+								nestedOptions.spacePerIndentation),
+							' '
+						);
+						std::string wrappedEncoding = "[\r\n";
 						for (const auto value: *impl_->arrayValues)
 						{
 							if (isFirst)
+							{
 								isFirst = false;
+							}
 							else
+							{
 								impl_->encoding += ',';
-							impl_->encoding += value->ToString(options);
+								wrappedEncoding += ",\r\n";
+							}
+							const auto encodedValue = value->ToString(nestedOptions);
+							impl_->encoding += encodedValue;
+							wrappedEncoding += nestedIndentation;
+							wrappedEncoding += encodedValue;
 						}
 						impl_->encoding += ']';
+						wrappedEncoding += "\r\n";
+						std::string indentation(options.depth * options.spacePerIndentation, ' ');
+						wrappedEncoding += indentation;
+						wrappedEncoding += "]";
+						if (options.prettyPrint)
+							impl_->encoding = wrappedEncoding;
 					}
 					break;
 				case Type::Object:
 					{
 						impl_->encoding = '{';
 						bool isFirst = true;
+						auto nestedOptions = options;
+						nestedOptions.depth++;
+						std::string nestedIndentation(
+							(
+								nestedOptions.depth *
+								nestedOptions.spacePerIndentation),
+							' '
+						);
+						std::string wrappedEncoding = "{\r\n";
 						for (const auto& entry: *impl_->objectValues)
 						{
 							if (isFirst)
+							{
 								isFirst = false;
+							}
 							else
+							{
 								impl_->encoding += ',';
+								wrappedEncoding += ",\r\n";
+							}
 							const JSON jsonKey(entry.first);
-							impl_->encoding +=  jsonKey.ToString(options) + ":";
-							impl_->encoding += entry.second->ToString(options);
+							const auto encodedValue = (
+								jsonKey.ToString(nestedOptions)
+								+ (nestedOptions.prettyPrint ? ": " : ":")
+								+ entry.second->ToString(nestedOptions)
+							);
+
+							impl_->encoding += encodedValue;
+							wrappedEncoding += nestedIndentation;
+							wrappedEncoding += encodedValue;
 						}
 						impl_->encoding += '}';
+						wrappedEncoding += "\r\n";
+						std::string indentation(options.depth * options.spacePerIndentation, ' ');
+						wrappedEncoding += indentation;
+						wrappedEncoding += "}";
+						if (options.prettyPrint)
+							impl_->encoding = wrappedEncoding;
 					}
 					break;
 				default:

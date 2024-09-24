@@ -494,3 +494,81 @@ TEST(JSONTests, ReassignValuesToTestCopyConstructor)
 	ASSERT_EQ("[26,\"test text\",\"test\",false]", json1.ToString());
 	ASSERT_EQ("[26,\"test text\",true]", json2.ToString());
 }
+
+TEST(JSONTests, DecodeArrayPrettyPrinted)
+{
+	const std::string encoding(
+		"[\r\n"
+		"    \"First\",\r\n"
+		"    \"Word\",\r\n"
+		"    \"In\",\r\n"
+		"    \"String\"\r\n"
+		"]"
+	);
+	JSON::JSON json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Array);
+	ASSERT_EQ(json.getSize(), 4);
+	JSON::EncodingOptions opt;
+	opt.deleteCache = true;
+	opt.prettyPrint = true;
+	ASSERT_EQ(encoding, json.ToString(opt));
+}
+
+TEST(JSONTests, DecodeANestedArrayPrettyPrinted)
+{
+	const std::string encoding(
+		"[\r\n"
+		"    [\r\n"
+		"        \"name\",\r\n"
+		"        \"age\",\r\n"
+		"        \"job\"\r\n"
+		"    ],\r\n"
+		"    [\r\n"
+		"        \"ammar\",\r\n"
+		"        25,\r\n"
+		"        \"student\"\r\n"
+		"    ]\r\n"
+		"]"
+	);
+	JSON::JSON json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Array);
+	ASSERT_EQ(json.getSize(), 2);
+	JSON::EncodingOptions opt;
+	opt.deleteCache = true;
+	opt.prettyPrint = true;
+	ASSERT_EQ(encoding, json.ToString(opt));
+}
+
+TEST(JSONTests, DecodeArrayOfObjectsPrettyPrinted)
+{
+	const std::string encoding(
+		"[\r\n"
+		"    {\r\n"
+		"        \"age\": 25,\r\n"
+		"        \"hobbies\": [\r\n"
+		"            \"Swimming\",\r\n"
+		"            \"Programming\",\r\n"
+		"            \"Reading\"\r\n"
+		"        ],\r\n"
+		"        \"name\": \"Ammar\",\r\n"
+		"        \"smoking\": true\r\n"
+		"    },\r\n"
+		"    {\r\n"
+		"        \"age\": 25,\r\n"
+		"        \"hobbies\": [\r\n"
+		"            \"Swimming\",\r\n"
+		"            \"Reading\"\r\n"
+		"        ],\r\n"
+		"        \"name\": \"Abd-allah\",\r\n"
+		"        \"smoking\": true\r\n"
+		"    }\r\n"
+		"]"
+	);
+	JSON::JSON json = JSON::JSON::FromString(encoding);
+	ASSERT_EQ(json.getType(), JSON::JSON::Type::Array);
+	ASSERT_EQ(json.getSize(), 2);
+	JSON::EncodingOptions opt;
+	opt.deleteCache = true;
+	opt.prettyPrint = true;
+	ASSERT_EQ(encoding, json.ToString(opt));
+}
