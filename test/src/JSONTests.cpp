@@ -572,3 +572,9 @@ TEST(JSONTests, DecodeArrayOfObjectsPrettyPrinted)
 	opt.prettyPrint = true;
 	ASSERT_EQ(encoding, json.ToString(opt));
 }
+
+TEST(JSONTests, JSONArrayInitializerList)
+{
+	JSON::JSON json{26, "Hello, World!", true};
+	ASSERT_EQ("[26,\"Hello, World!\",true]", json.ToString());
+}

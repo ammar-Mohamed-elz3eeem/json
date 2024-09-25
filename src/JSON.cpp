@@ -1270,6 +1270,18 @@ namespace JSON
 		impl_->floatingPointValue = value;
 	}
 
+	JSON::JSON(std::initializer_list<const JSON> args)
+		: impl_(new Impl())
+	{
+		impl_->type = Type::Array;
+		impl_->arrayValues = new std::vector<std::shared_ptr<JSON>>(args.size());
+		size_t index = 0;
+		for (auto arg = args.begin(); arg != args.end(); arg++, index++)
+		{
+			(*impl_->arrayValues)[index] = std::make_shared<JSON>(*arg);
+		}
+	}
+
 	auto JSON::getType() const -> Type
 	{
 		return impl_->type;

@@ -13,6 +13,7 @@
 #include <vector>
 #include <math.h>
 #include <stack>
+#include <initializer_list>
 
 
 /**
@@ -279,7 +280,7 @@ namespace JSON
 
 		/**
 		 * @brief
-		 *     Construct a new JSON object with the given type.
+		 *     Construct a new JSON value with the given type.
 		 * 
 		 * @param[in] type
 		 *     the new type we want for our json value.
@@ -292,63 +293,73 @@ namespace JSON
 
 		/**
 		 * @brief
-		 *     This constructs a JSON object consisting of
+		 *     This constructs a JSON value consisting of
 		 *     the "null" literal.
 		 * 
 		 * @param[in] null
-		 *     This is the object to wrap in JSON.
+		 *     This is the value to wrap in JSON.
 		 */
 		JSON(nullptr_t);
 
 		/**
 		 * @brief
-		 *     This constructs a JSON object consisting of
+		 *     This constructs a JSON value consisting of
 		 *     the given boolean value.
 		 * 
 		 * @param[in] value
-		 *     This is the object to wrap in JSON.
+		 *     This is the value to wrap in JSON.
 		 */
 		JSON(bool);
 
 		/**
 		 * @brief
-		 *     This constructs a JSON object consisting of
+		 *     This constructs a JSON value consisting of
 		 *     the given string value.
 		 * 
 		 * @param[in] value
-		 *     This is the object to wrap in JSON.
+		 *     This is the value to wrap in JSON.
 		 */
 		JSON(const std::string &);
 
 		/**
 		 * @brief
-		 *     This constructs a JSON object consisting of
+		 *     This constructs a JSON value consisting of
 		 *     the given C String value.
 		 * 
 		 * @param[in] value
-		 *     This is the object to wrap in JSON.
+		 *     This is the value to wrap in JSON.
 		 */
 		JSON(const char *);
 
 		/**
 		 * @brief
-		 *     This constructs a JSON object consisting of
+		 *     This constructs a JSON value consisting of
 		 *     the given integer value.
 		 * 
 		 * @param[in] value
-		 *     This is the object to wrap in JSON.
+		 *     This is the value to wrap in JSON.
 		 */
 		JSON(int);
 
 		/**
 		 * @brief
-		 *     This constructs a JSON object consisting of
+		 *     This constructs a JSON value consisting of
 		 *     the given floating point value.
 		 * 
 		 * @param[in] value
-		 *     This is the object to wrap in JSON.
+		 *     This is the value to wrap in JSON.
 		 */
 		JSON(double);
+
+		/**
+		 * @brief
+		 *     This constructs a JSON array containing copies
+		 *     of the elements in the given initializer list.
+		 * 
+		 * @param[in] value
+		 *     This is the values to copy in the new array.
+		 */
+		JSON(std::initializer_list<const JSON>);
 
 		/**
 		 * @brief
