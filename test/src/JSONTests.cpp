@@ -578,3 +578,15 @@ TEST(JSONTests, JSONArrayInitializerList)
 	JSON::JSON json{26, "Hello, World!", true};
 	ASSERT_EQ("[26,\"Hello, World!\",true]", json.ToString());
 }
+
+TEST(JSONTests, JSONObjectInitializerList)
+{
+	JSON::JSON json{
+		{ "name", "Ammar" },
+		{ "age", 25 },
+		{ "hobbies", {"Swimming", "Programming", "Reading"} },
+		{ "GPA", 2.26 },
+	};
+
+	ASSERT_EQ("{\"name\":\"Ammar\",\"age\":25,\"hobbies\":[\"Swimming\",\"Programming\",\"Reading\"],\"GPA\":2.26}", json.ToString());
+}
