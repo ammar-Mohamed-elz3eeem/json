@@ -775,10 +775,10 @@ namespace JSON
 						return;
 						break;
 
-					case 3: // *DIGIT (1-9)
+					case 3: // *DIGIT (0-9)
 						{
 							const int previousValue = value;
-							if (codepoints[index] >= 0x31 && codepoints[index] <= 0x39)
+							if (codepoints[index] >= 0x30 && codepoints[index] <= 0x39)
 							{
 								value *= 10;
 								value += (int)(codepoints[index] - 0x30);
