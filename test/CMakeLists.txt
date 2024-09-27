@@ -14,8 +14,6 @@ set_target_properties(${This} PROPERTIES
     FOLDER Tests
 )
 
-find_package(gtest REQUIRED)
-
 target_include_directories(${This} PRIVATE ..)
 
 target_link_libraries(${This} PUBLIC
